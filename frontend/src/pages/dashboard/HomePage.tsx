@@ -7,8 +7,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { ANALYTICS_DATA, MOCK_CONVERSATIONS } from "@/utils/mockData";
-import { ConversationListItem } from "@/components/ConversationListItem";
+import { ANALYTICS_DATA } from "@/utils/mockData";
 import { UI } from "@/ui/ui";
 
 export function HomePage() {
@@ -292,13 +291,13 @@ export function HomePage() {
         </div>
 
         <div className="space-y-3">
-          {MOCK_CONVERSATIONS.slice(0, 4).map((conversation, index) => (
+          {/* {MOCK_CONVERSATIONS.slice(0, 4).map((conversation, index) => (
             <ConversationListItem
               key={conversation.id}
               conversation={conversation}
               index={index}
             />
-          ))}
+          ))} */}
         </div>
       </motion.div>
     </motion.div>

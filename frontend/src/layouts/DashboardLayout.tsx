@@ -1,39 +1,35 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { Button } from "@heroui/react";
+import { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { Sidebar } from "@/components/Sidebar";
+import { TopBar } from "@/components/TopBar";
 
 const DashboardLayout = () => {
-  const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  const currentPage = location.pathname.split("/").pop() || "home";
 
   return (
-    <div className="flex h-screen">
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-white border-r p-6">
-        <h2 className="text-xl font-semibold mb-6">VoiceDots</h2>
-        <button
-          onClick={() => navigate("/dashboard/conversations")}
-          className="block w-full text-left"
-        >
-          💬 Conversations
-        </button>
-      </aside>
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950">
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+        isCollapsed={isCollapsed}
+        currentPage={currentPage}
+      />
 
-      {/* MAIN */}
-      <main className="flex-1 bg-gray-50">
-        <div className="h-14 bg-white border-b flex justify-end items-center px-6">
-          <Button
-            size="sm"
-            radius="full"
-            variant="bordered"
-            onClick={() => navigate("/login")}
-          >
-            Logout
-          </Button>
-        </div>
+      <div className="flex flex-col flex-1 w-full overflow-hidden">
+        <TopBar 
+          onMenuClick={() => setIsSidebarOpen(true)} 
+          onToggleSidebar={() => setIsCollapsed(!isCollapsed)} 
+        />
 
-        <div className="p-6 overflow-auto h-[calc(100%-56px)]">
-          <Outlet />
-        </div>
-      </main>
+        {/* This is where the specific page content (Home, Conversations, etc.) will load */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          <Outlet /> 
+        </main>
+      </div>
     </div>
   );
 };

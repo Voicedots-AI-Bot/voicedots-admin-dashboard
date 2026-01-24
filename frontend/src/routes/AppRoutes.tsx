@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AuthLayout from "../layouts/AuthLayout";
+import DashboardLayout from "../layouts/DashboardLayout";
 import LoginPage from "../pages/LoginPage";
-import Dashboard from "@/pages/dashboard/Dashboard";
 import { HomePage } from "@/pages/dashboard/HomePage";
 import { ConversationsPage } from "@/pages/dashboard/ConversationsPage"
 
@@ -15,17 +15,19 @@ const AppRoutes = () => {
       </Route>
 
       {/* DASHBOARD */}
-      <Route path="/dashboard" element={<Dashboard />}>
+      <Route
+        path="/dashboard"
+        element={
+          //<ProtectedRoute>
+            <DashboardLayout />
+          //</ProtectedRoute>
+        }
+      >
+        {/* URL: /dashboard */}
         <Route index element={<HomePage />} />
+
+        {/* URL: /dashboard/conversations */}
         <Route path="conversations" element={<ConversationsPage />} />
-        <Route
-          path="settings"
-          element={
-            <div className="flex h-[50vh] items-center justify-center rounded-2xl border border-white/40 bg-white/20 backdrop-blur-md">
-              <p className="text-slate-500">Settings page placeholder</p>
-            </div>
-          }
-        />
       </Route>
 
       {/* FALLBACK */}
