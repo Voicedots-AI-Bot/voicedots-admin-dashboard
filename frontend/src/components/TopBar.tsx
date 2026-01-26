@@ -1,4 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import { Bell, Menu, ChevronDown, PanelLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -6,37 +9,205 @@ interface TopBarProps {
   isSidebarCollapsed?: boolean;
 }
 
-export function TopBar({ onMenuClick, onToggleSidebar }: TopBarProps) {
-  return (
-    <header className="sticky top-0 inset-x-0 flex flex-wrap sm:justify-start sm:flex-nowrap z-50 w-full bg-white border-b border-gray-200 text-sm py-3 sm:py-0 dark:bg-slate-900 dark:border-slate-700">
-      <nav className="relative max-w-7xl w-full mx-auto px-4 sm:flex sm:items-center sm:justify-between h-16" aria-label="Global">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={onMenuClick} className="md:hidden p-2 inline-flex justify-center items-center gap-2 rounded-lg border font-medium bg-white text-gray-700 shadow-sm align-middle hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 transition-all dark:bg-slate-900 dark:hover:bg-slate-800 dark:border-slate-700 dark:text-gray-400 dark:focus:ring-offset-gray-800">
-              <Menu size={20} />
-            </button>
-            <button onClick={onToggleSidebar} className="hidden md:flex p-2 items-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800">
-              <PanelLeft size={20} />
-            </button>
-          </div>
-        </div>
+export function TopBar({
+  onMenuClick,
+  onToggleSidebar,
+  isSidebarCollapsed,
+}: TopBarProps) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-        <div className="flex items-center justify-end gap-x-4 w-full sm:w-auto">
-          {/* Notifications */}
-          <button className="relative inline-flex flex-shrink-0 justify-center items-center h-[38px] w-[38px] rounded-full bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800">
-            <Bell size={18} />
-            <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white bg-red-500 dark:ring-slate-900"></span>
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(true);
+
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(e.target as Node)
+      ) {
+        setProfileOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Remove red dot when notifications opened
+  useEffect(() => {
+    if (notifOpen) setHasUnread(false);
+  }, [notifOpen]);
+
+  return (
+    <header className="sticky top-0 inset-x-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-slate-900 dark:border-slate-700">
+      <nav className="relative w-full px-4 h-16 flex items-center justify-between">
+        {/* LEFT */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onMenuClick}
+            className="md:hidden p-2 rounded-lg border bg-white text-gray-700 hover:bg-gray-50 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-400"
+          >
+            <Menu size={20} />
           </button>
 
-          {/* User Profile Dropdown */}
-          <div className="hs-dropdown relative inline-flex">
-            <button id="hs-dropdown-profile" type="button" className="hs-dropdown-toggle inline-flex items-center gap-x-2 text-sm font-semibold rounded-full border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800 pr-3">
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-400 dark:hover:bg-slate-800"
+          >
+            <PanelLeft size={20} />
+          </button>
+        </div>
+
+        {/* RIGHT */}
+        <div
+          className={`flex items-center gap-3 sm:gap-4 transition-all ${
+            isSidebarCollapsed ? "md:mr-2" : ""
+          }`}
+        >
+          {/* 🔔 Notifications */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => {
+                setNotifOpen(!notifOpen);
+                setProfileOpen(false);
+              }}
+              className="relative h-9 w-9 rounded-full border border-gray-200 flex items-center justify-center bg-white hover:bg-gray-50 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-400"
+            >
+              <Bell size={18} />
+              {hasUnread && (
+                <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900" />
+              )}
+            </button>
+
+            {notifOpen && (
+              <div
+                className="
+                  fixed md:absolute
+                  top-16 md:top-auto
+                  left-1/2 md:left-auto
+                  -translate-x-1/2 md:translate-x-0
+                  right-auto md:right-0
+                  mt-2
+                  w-[calc(100vw-1rem)] md:w-72
+                  max-w-md
+                  rounded-2xl
+                  border border-gray-200
+                  bg-white
+                  shadow-xl
+                  dark:bg-slate-900 dark:border-slate-700
+                  z-50
+                "
+              >
+                <div className="px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                    Notifications
+                  </p>
+                </div>
+
+                <div className="py-2">
+                  <div className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    🎉 Welcome to{" "}
+                    <span className="font-semibold">Voicedots</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 👤 Profile */}
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => {
+                setProfileOpen(!profileOpen);
+                setNotifOpen(false);
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-2 sm:px-3 py-1.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
+            >
               <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs">
                 SK
               </div>
-              <span className="hidden sm:block text-gray-600 dark:text-gray-400">Sai Kumar</span>
-              <ChevronDown size={14} className="text-gray-400" />
+
+              {/* Hide name on small screens */}
+              <span className="hidden md:block text-gray-600 dark:text-gray-400">
+                Sai Kumar
+              </span>
+
+              <ChevronDown
+                size={14}
+                className={`text-gray-400 transition ${
+                  profileOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
+
+            {profileOpen && (
+              <div
+                className="
+                  absolute right-0 mt-2
+                  w-[calc(100vw-1rem)] sm:w-56
+                  rounded-2xl
+                  border border-gray-200
+                  bg-white
+                  shadow-xl
+                  dark:bg-slate-900 dark:border-slate-700
+                  z-50
+                "
+              >
+                <div className="p-4 border-b border-gray-200 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-white">
+                    Sai Kumar
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    saikumar@example.com
+                  </p>
+                </div>
+
+                <div className="py-2">
+                  {/* Pricing (disabled) */}
+                  <button
+                    disabled
+                    className="w-full text-left px-4 py-2 text-sm text-gray-400 cursor-not-allowed"
+                  >
+                    Pricing
+                  </button>
+
+                  {/* Settings */}
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/dashboard/settings");
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-slate-800"
+                  >
+                    Settings
+                  </button>
+                </div>
+
+                <div className="border-t border-gray-200 dark:border-slate-700">
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      logout();
+                      navigate("/login", { replace: true });
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-slate-800"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </nav>
