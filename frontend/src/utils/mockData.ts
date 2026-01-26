@@ -1,3 +1,4 @@
+// ================= TYPES =================
 export interface Conversation {
   id: string
   title: string
@@ -5,7 +6,7 @@ export interface Conversation {
   initials: string
   cost: number
   messages: number
-  status: 'active' | 'pending' | 'completed'
+  status: 'successful' | 'error'
   lastActive: string
   date: string // ISO date string for sorting
 }
@@ -19,191 +20,108 @@ export interface Message {
   cost?: number
 }
 
+// ================= CONVERSATIONS =================
 export const MOCK_CONVERSATIONS: Conversation[] = [
   {
-    id: '1',
-    title: 'Product Launch Strategy',
-    avatar: 'PL',
-    initials: 'PL',
-    cost: 8.5,
-    messages: 42,
-    status: 'active',
-    lastActive: '2 mins ago',
-    date: '2023-10-25T10:30:00Z',
+    id: 'conv_1601kfmpshb0fmb9skrek2b9m485',
+    title: 'Hello? Hello? Hello? Hello?',
+    avatar: 'VD',
+    initials: 'VD',
+    cost: 0.0044,
+    messages: 7,
+    status: 'successful', // ✅ user + bot present
+    lastActive: '44 sec ago',
+    date: '2025-01-16T10:00:00Z',
   },
   {
-    id: '2',
-    title: 'Q4 Marketing Plan',
-    avatar: 'MK',
-    initials: 'MK',
-    cost: 6.2,
-    messages: 28,
-    status: 'active',
-    lastActive: '1 hour ago',
-    date: '2023-10-25T09:15:00Z',
+    id: 'conv_2101kffjh6rxeagrg2d2bjdjg0at',
+    title: 'I think we can talk about it briefly',
+    avatar: 'VD',
+    initials: 'VD',
+    cost: 0.015,
+    messages: 21,
+    status: 'successful', // ✅ user + bot present
+    lastActive: '3 mins ago',
+    date: '2025-01-21T12:00:00Z',
   },
   {
-    id: '3',
-    title: 'Website Redesign',
-    avatar: 'WR',
-    initials: 'WR',
-    cost: 9.5,
-    messages: 156,
-    status: 'pending',
-    lastActive: '3 hours ago',
-    date: '2023-10-24T16:45:00Z',
-  },
-  {
-    id: '4',
-    title: 'Client Onboarding Flow',
-    avatar: 'CO',
-    initials: 'CO',
-    cost: 2.4,
-    messages: 12,
-    status: 'completed',
-    lastActive: '1 day ago',
-    date: '2023-10-23T14:20:00Z',
-  },
-  {
-    id: '5',
-    title: 'Mobile App Features',
-    avatar: 'MA',
-    initials: 'MA',
-    cost: 4.5,
-    messages: 34,
-    status: 'active',
-    lastActive: '5 mins ago',
-    date: '2023-10-25T11:00:00Z',
-  },
-  {
-    id: '6',
-    title: 'User Research 2024',
-    avatar: 'UR',
-    initials: 'UR',
-    cost: 1.5,
-    messages: 8,
-    status: 'pending',
+    id: 'conv_error_demo',
+    title: 'Silent call',
+    avatar: 'VD',
+    initials: 'VD',
+    cost: 0,
+    messages: 1,
+    status: 'error', // ❌ no meaningful exchange
     lastActive: '2 days ago',
-    date: '2023-10-22T09:00:00Z',
-  },
-  {
-    id: '7',
-    title: 'Brand Guidelines',
-    avatar: 'BG',
-    initials: 'BG',
-    cost: 7.8,
-    messages: 67,
-    status: 'completed',
-    lastActive: '1 week ago',
-    date: '2023-10-18T15:30:00Z',
-  },
-  {
-    id: '8',
-    title: 'Sales Deck Review',
-    avatar: 'SD',
-    initials: 'SD',
-    cost: 3.2,
-    messages: 19,
-    status: 'active',
-    lastActive: '4 hours ago',
-    date: '2023-10-24T13:10:00Z',
-  },
-  {
-    id: '9',
-    title: 'Competitor Analysis',
-    avatar: 'CA',
-    initials: 'CA',
-    cost: 11.0,
-    messages: 89,
-    status: 'completed',
-    lastActive: '3 days ago',
-    date: '2023-10-21T11:45:00Z',
-  },
-  {
-    id: '10',
-    title: 'Email Campaign Copy',
-    avatar: 'EC',
-    initials: 'EC',
-    cost: 4.2,
-    messages: 25,
-    status: 'active',
-    lastActive: '30 mins ago',
-    date: '2023-10-25T10:00:00Z',
+    date: '2025-01-10T09:30:00Z',
   },
 ]
 
+// ================= MESSAGES =================
 export const MOCK_MESSAGES: Message[] = [
+  // -------- Conversation 1 --------
   {
     id: 'm1',
-    conversationId: '1',
-    sender: 'user',
-    content: 'Hi! I need help planning our product launch strategy.',
-    timestamp: '2023-10-25T10:15:00Z',
+    conversationId: 'conv_1601kfmpshb0fmb9skrek2b9m485',
+    sender: 'bot',
+    content: 'Hello! I am Lead Voice Ambassador of voicedots. How can I help you?',
+    timestamp: '00:00',
+    cost: 0.0003,
   },
   {
     id: 'm2',
-    conversationId: '1',
-    sender: 'bot',
-    content:
-      "Hello! I'd be happy to help you plan your product launch. Let's start by understanding your target audience and key objectives. What product are you launching?",
-    timestamp: '2023-10-25T10:15:30Z',
-    cost: 0.05,
+    conversationId: 'conv_1601kfmpshb0fmb9skrek2b9m485',
+    sender: 'user',
+    content: 'Hello? Hello? Hello? Hello?',
+    timestamp: '00:09',
   },
   {
     id: 'm3',
-    conversationId: '1',
-    sender: 'user',
-    content:
-      "We're launching a new SaaS platform for project management teams.",
-    timestamp: '2023-10-25T10:16:00Z',
+    conversationId: 'conv_1601kfmpshb0fmb9skrek2b9m485',
+    sender: 'bot',
+    content: 'Hello! I am here to assist you. How may I help you today?',
+    timestamp: '00:15',
+    cost: 0.0011,
   },
+
+  // -------- Conversation 2 --------
   {
     id: 'm4',
-    conversationId: '1',
-    sender: 'bot',
-    content:
-      "Excellent! Project management SaaS is a competitive space. Here's a comprehensive launch strategy:\n\n1. Pre-launch (4-6 weeks before):\n- Build landing page with email capture\n- Create beta tester program\n- Develop content marketing strategy\n\n2. Launch week:\n- Product Hunt launch\n- Email campaign to waitlist\n- Social media announcement\n\n3. Post-launch:\n- Gather user feedback\n- Iterate quickly\n- Build case studies\n\nWould you like me to dive deeper into any of these areas?",
-    timestamp: '2023-10-25T10:16:45Z',
-    cost: 0.12,
+    conversationId: 'conv_2101kffjh6rxeagrg2d2bjdjg0at',
+    sender: 'user',
+    content: 'I think we can talk about it briefly.',
+    timestamp: '00:17',
   },
   {
     id: 'm5',
-    conversationId: '1',
-    sender: 'user',
-    content:
-      'This is great! Can you help me with the content marketing strategy specifically?',
-    timestamp: '2023-10-25T10:18:00Z',
+    conversationId: 'conv_2101kffjh6rxeagrg2d2bjdjg0at',
+    sender: 'bot',
+    content: 'Of course, I am here to help. What would you like to discuss?',
+    timestamp: '00:22',
+    cost: 0.0025,
   },
   {
     id: 'm6',
-    conversationId: '1',
-    sender: 'bot',
-    content:
-      'Absolutely! Here\'s a content marketing strategy tailored for your project management SaaS:\n\n**Blog Content:**\n- "10 Project Management Mistakes Killing Your Productivity"\n- "How to Choose the Right PM Tool for Your Team"\n- Case studies from beta users\n\n**Video Content:**\n- Product demo walkthrough\n- Customer testimonials\n- Tips & tricks series\n\n**Social Media:**\n- LinkedIn: Thought leadership posts\n- Twitter: Quick tips, feature highlights\n- YouTube: Tutorial videos\n\n**Email Sequences:**\n- Welcome series (5 emails)\n- Feature education drip\n- Success stories\n\nShould I create a detailed content calendar for the first month?',
-    timestamp: '2023-10-25T10:19:30Z',
-    cost: 0.15,
+    conversationId: 'conv_2101kffjh6rxeagrg2d2bjdjg0at',
+    sender: 'user',
+    content: 'MBA की fees कितनी है?',
+    timestamp: '01:31',
   },
   {
     id: 'm7',
-    conversationId: '2',
-    sender: 'user',
-    content: 'I need to create a Q4 marketing plan for our company.',
-    timestamp: '2023-10-25T09:10:00Z',
-  },
-  {
-    id: 'm8',
-    conversationId: '2',
+    conversationId: 'conv_2101kffjh6rxeagrg2d2bjdjg0at',
     sender: 'bot',
     content:
-      "I'll help you create a comprehensive Q4 marketing plan. First, let me understand your business better. What industry are you in and what are your main marketing goals for Q4?",
-    timestamp: '2023-10-25T09:10:30Z',
-    cost: 0.04,
+      'MBA programs की annual fees लगभग ₹1,10,000 से ₹1,50,000 तक होती है.',
+    timestamp: '01:36',
+    cost: 0.0034,
   },
 ]
 
+// ================= ANALYTICS (KEEP EXPORT!) =================
 export const ANALYTICS_DATA = {
   totalConversations: 124,
-  totalCost: 48.50,
+  totalCost: 48.5,
   totalMessages: 1429,
   avgCost: 3.91,
   costHistory: [

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import loginLogo from "@/assets/login.png";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -23,7 +24,6 @@ const LoginPage = () => {
     }
 
     setLoading(true);
-    // Simulate API Auth
     setTimeout(() => {
       login();
       setLoading(false);
@@ -32,127 +32,138 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 dark:bg-slate-900">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo / Brand */}
-        <div className="flex justify-center items-center gap-2 mb-6">
-          <div className="bg-blue-600 p-2 rounded-lg">
-            <ShieldCheck className="text-white w-8 h-8" />
-          </div>
-          <span className="text-2xl font-bold text-gray-800 dark:text-white tracking-tight">
-            voicedots<span className="text-blue-600">.</span>
-          </span>
-        </div>
-        
-        <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-          Admin Portal
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-          Secure access for authorized personnel only
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <img
+            src={loginLogo}
+            alt="Voicedots"
+            className="mx-auto h-12 sm:h-14 object-contain mb-3"
+          />
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-white dark:bg-slate-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-slate-700">
+          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+            Admin Portal
+          </h1>
+
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Secure access for authorized personnel only
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 px-6 py-8 sm:px-8">
           <form className="space-y-6" onSubmit={handleLogin}>
-            
-            {/* Error Message */}
+            {/* Error */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500 flex items-center gap-2" role="alert">
+              <div
+                className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/10 dark:text-red-400"
+                role="alert"
+              >
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
 
+            {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Email Address
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+              >
+                Email address
               </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="py-3 px-4 block w-full border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-gray-400 dark:focus:ring-gray-600"
-                  placeholder="admin@voicedots.com"
-                />
-              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="admin@voicedots.com"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-200"
+              />
             </div>
 
-            <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-200"
+              >
                 Password
               </label>
-              <div className="mt-1 relative">
+
+              <div className="relative mt-1">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="py-3 px-4 block w-full border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-slate-700 dark:text-gray-400 dark:focus:ring-gray-600"
                   placeholder="••••••••"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-10 text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-gray-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600 transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-blue-600"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
+            {/* Remember + Forgot */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <input
-                  id="remember-me"
                   type="checkbox"
-                  className="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-800 dark:text-gray-300">
-                  Trust this device
-                </label>
-              </div>
+                Trust this device
+              </label>
 
-              <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-                  Forgot password?
-                </a>
-              </div>
+              <a
+                href="#"
+                className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+              >
+                Forgot password?
+              </a>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none transition-all shadow-sm"
-              >
-                {loading ? (
-                  <span className="animate-spin inline-block w-4 h-4 border-[2px] border-current border-t-transparent text-white rounded-full" role="status" aria-label="loading"></span>
-                ) : null}
-                Sign in to Dashboard
-              </button>
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold tracking-wide text-white hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {loading ? (
+                <span
+                  className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+                  aria-label="loading"
+                />
+              ) : (
+                "Sign in to Dashboard"
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative pt-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-slate-700" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-white dark:bg-slate-800 px-2 text-xs text-gray-500">
+                  Security Verified
+                </span>
+              </div>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-slate-700"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-slate-800 text-gray-500">Security Verified</span>
-              </div>
-            </div>
-          </div>
         </div>
-        
-        <p className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500">
-          &copy; 2026 voicedots. All rights reserved. <br />
-          Protected by industry-standard encryption.
+
+        {/* Footer */}
+        <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
+          © 2026 Voicedots. All rights reserved.
         </p>
       </div>
     </div>
