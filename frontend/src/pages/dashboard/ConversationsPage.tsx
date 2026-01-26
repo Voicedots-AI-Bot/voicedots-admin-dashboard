@@ -1,23 +1,51 @@
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { UI } from "@/ui/ui";
 import { ConversationCard } from "@/components/ConversationCard";
-import { MOCK_CONVERSATIONS } from "@/utils/mockData";
+import conversationsApi from "@/api/conversations";
+import type { ConversationSummary } from "@/types/conversation.types";
 
 export function ConversationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    async function fetchConversations() {
+      try {
+        setIsLoading(true);
+        const data = await conversationsApi.getConversations();
+        setConversations(data);
+      } catch (error) {
+        console.error("Failed to load conversations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchConversations();
+  }, []);
+
   const filteredConversations = useMemo(() => {
-    return MOCK_CONVERSATIONS
-      .filter((conv) =>
-        conv.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      .sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-  }, [searchQuery]);
+    if (!conversations) return [];
+    return conversations
+      .filter((conv) => {
+        const title = conv.call_summary_title ?? "";
+        const id = conv.conversation_id ?? "";
+        
+        const searchLower = searchQuery.toLowerCase();
+        
+        return (
+          title.toLowerCase().includes(searchLower) || 
+          id.toLowerCase().includes(searchLower)
+        );
+      })
+      // .sort(
+      //   (a, b) => new Date(b.start_time_unix_secs).getTime() - new Date(a.start_time_unix_secs).getTime()
+      // );
+  }, [searchQuery, conversations]);
 
   return (
     <div className="h-[calc(100vh-140px)] flex flex-col gap-6">
@@ -69,7 +97,13 @@ export function ConversationsPage() {
 
       {/* Conversation List */}
       <div className="flex flex-col gap-3 overflow-y-auto pr-1">
-        {filteredConversations.length === 0 ? (
+        {isLoading ? (
+          // 4. Added Loading State
+          <div className="flex flex-col items-center justify-center p-10 gap-2">
+            <Loader2 className="h-8 w-8 animate-spin" style={{ color: UI.colors.text.muted }} />
+            <span style={{ color: UI.colors.text.muted }}>Fetching conversations...</span>
+          </div>
+        ) : filteredConversations.length === 0 ? (
           <div
             className="rounded-xl p-6 text-center text-sm"
             style={{
@@ -80,21 +114,17 @@ export function ConversationsPage() {
             No conversations found
           </div>
         ) : (
-     filteredConversations.map((conversation) => (
-          <div
-            key={conversation.id}
-            onClick={() =>
-              navigate(
-                `/dashboard/conversations/${conversation.id}`,
-                { replace: true }
-              )
-            }
-            className="cursor-pointer"
-          >
-            <ConversationCard conversation={conversation} />
-          </div>
-        ))
-
+          filteredConversations.map((conversation) => (
+            <div
+              key={conversation.conversation_id}
+              onClick={() =>
+                navigate(`/dashboard/conversations/${conversation.conversation_id}`)
+              }
+              className="cursor-pointer"
+            >
+              <ConversationCard conversation={conversation} />
+            </div>
+          ))
         )}
       </div>
     </div>

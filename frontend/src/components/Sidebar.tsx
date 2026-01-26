@@ -1,9 +1,10 @@
-import { Home, MessageSquare, Settings, LogOut, X } from "lucide-react";
+import { Home, MessageSquare, Settings, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import SidebarLogo from "./SideBarLogo";
 
-import logoIcon from "@/assets/logo.png";
-import logoText from "@/assets/voicedots.png";
+// import logoIcon from "@/assets/logo.png";
+// import logoText from "@/assets/voicedots.png";
 
 interface SidebarProps {
   isOpen: boolean; // mobile
@@ -49,32 +50,10 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full py-6">
           {/* Logo */}
-          <div className="px-6 mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-  {/* Icon logo */}
-  <img
-    src={logoIcon}
-    alt="Voicedots logo"
-    className="w-12 h-12 object-contain"
-  />
-
-  {/* Text logo */}
-  {!isCollapsed && (
-    <img
-      src={logoText}
-      alt="Voicedots"
-      className="h-10 md:h-15 object-contain"
-    />
-  )}
-</div>
-            {/* Mobile close */}
-            <button
-              onClick={onClose}
-              className="md:hidden text-gray-500 hover:text-gray-800 dark:text-gray-400"
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <SidebarLogo 
+          isCollapsed={isCollapsed} 
+          onClose={onClose} 
+        />
 
           {/* Navigation */}
           <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
