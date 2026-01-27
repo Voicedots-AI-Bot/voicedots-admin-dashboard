@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Agent, ConversationSummary, ConversationDetail, GetConversationsResponse, GetAgentsResponse } from '@/types/conversation.types';
+import type { ConversationSummary, ConversationDetail, GetConversationsResponse, ConversationDetailsResponse } from '@/types/conversation.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -12,16 +12,16 @@ const apiClient = axios.create({
 
 
 const conversationsApi = {
-  getAgents: async (): Promise<Agent[]> => {
-    try {
-      const response = await apiClient.get<GetAgentsResponse>('/agents');
+  // getAgents: async (): Promise<Agent[]> => {
+  //   try {
+  //     const response = await apiClient.get<GetAgentsResponse>('/agents');
 
-      return response.data.agents;
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      throw error;
-    }
-  },
+  //     return response.data.agents;
+  //   } catch (error) {
+  //     console.error('Error fetching agents:', error);
+  //     throw error;
+  //   }
+  // },
 
   getConversations: async (agentId?: string): Promise<ConversationSummary[]> => {
     try {
@@ -36,10 +36,11 @@ const conversationsApi = {
     }
   },
 
-  getConversationDetails: async (conversationId: string): Promise<ConversationDetail> => {
+  getConversationDetails: async (conversationId: string): Promise<ConversationDetail[]> => {
     try {
-      const response = await apiClient.get<ConversationDetail>(`/v1/conversations/${conversationId}`);
-      return response.data;
+      const response = await apiClient.get<ConversationDetailsResponse>(`/v1/conversations/${conversationId}`);
+      console.log(response.data.data.transcript)
+      return response.data.data.transcript;
     } catch (error) {
       console.error(`Error fetching details for conversation ${conversationId}:`, error);
       throw error;

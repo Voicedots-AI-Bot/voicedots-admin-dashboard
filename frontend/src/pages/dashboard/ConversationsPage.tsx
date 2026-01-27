@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { UI } from "@/ui/ui";
+// import { useNavigate } from "react-router-dom";
+import { UI } from "@/ui/colors";
 import { ConversationCard } from "@/components/ConversationCard";
 import conversationsApi from "@/api/conversations";
 import type { ConversationSummary } from "@/types/conversation.types";
@@ -10,7 +10,7 @@ export function ConversationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchConversations() {
@@ -117,9 +117,9 @@ export function ConversationsPage() {
           filteredConversations.map((conversation) => (
             <div
               key={conversation.conversation_id}
-              onClick={() =>
-                navigate(`/dashboard/conversations/${conversation.conversation_id}`)
-              }
+              // onClick={() =>
+              //   navigate(`/dashboard/conversations/${conversation.conversation_id}`)
+              // }
               className="cursor-pointer"
             >
               <ConversationCard conversation={conversation} />

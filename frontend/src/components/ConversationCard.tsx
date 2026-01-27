@@ -1,6 +1,6 @@
 import { MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { UI } from "@/ui/ui";
+import { UI } from "@/ui/colors";
 import type { ConversationSummary } from "@/types/conversation.types";
 
 interface ConversationCardProps {

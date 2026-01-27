@@ -8,7 +8,7 @@ import {
   ArrowDownRight,
 } from "lucide-react";
 import { ANALYTICS_DATA } from "@/utils/mockData";
-import { UI } from "@/ui/ui";
+import { UI } from "@/ui/colors";
 
 export function HomePage() {
   const container = {

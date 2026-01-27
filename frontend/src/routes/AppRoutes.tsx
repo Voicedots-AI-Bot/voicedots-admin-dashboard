@@ -24,10 +24,7 @@ const AppRoutes = () => {
         <Route index element={<HomePage />} />
 
         <Route path="conversations" element={<ConversationsPage />} />
-        <Route
-          path="conversations/:id"
-          element={<ConversationDetails />}
-        />
+        <Route path="conversations/:id" element={<ConversationDetails />} />
 
         {/* SETTINGS */}
         <Route path="settings" element={<SettingsPage />} />

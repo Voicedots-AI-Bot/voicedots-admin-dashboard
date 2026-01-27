@@ -1,14 +1,4 @@
 export interface ConversationSummary {
-  // id: string
-  // title: string
-  // avatar: string
-  // initials: string
-  // cost: number
-  // messages: number
-  // status: 'successful' | 'error'
-  // lastActive: string
-  // date: string
-
   agent_id: string,
   branch_id: string,
   version_id: string,
@@ -26,14 +16,25 @@ export interface ConversationSummary {
 }
 
 export interface ConversationDetail {
-  conversation_id: string;
-  agent_id: string;
-  transcript: Array<{
-    role: 'user' | 'agent';
-    message: string;
-    time_in_call_secs: number;
-  }>;
-  audio_url?: string;
+  role: "agent" | "user";
+  message: string | null;
+  original_message: string | null;
+  time_in_call_secs: number;
+  interrupted: boolean;
+  source_medium: string | null;
+  agent_metadata: {
+    agent_id: string;
+    branch_id: string;
+    workflow_node_id: string;
+  } | null;
+  tool_calls: Array<Record<string, unknown>>;
+  tool_results: Array<Record<string, unknown>>;
+  conversation_turn_metrics: unknown | null;
+  rag_retrieval_info: unknown | null;
+  llm_usage: unknown | null;
+  multivoice_message: unknown | null;
+  feedback: unknown | null;
+  llm_override: unknown | null;
 }
 
 export interface Agent {
@@ -50,6 +51,7 @@ export interface GetConversationsResponse {
   };
 }
 
-export interface GetAgentsResponse {
-  agents: Agent[];
+export interface ConversationDetailsResponse {
+  status: string;
+  data: Record<string, string | ConversationDetail | any>;
 }
