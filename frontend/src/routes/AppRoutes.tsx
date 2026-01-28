@@ -8,6 +8,8 @@ import { ConversationsPage } from "@/pages/dashboard/ConversationsPage";
 import { ConversationDetails } from "@/pages/dashboard/ConversationDetails";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
 
+import { LeadsPage } from "@/pages/dashboard/LeadsPage";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -23,8 +25,19 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<HomePage />} />
 
+        {/* CONVERSATIONS */}
         <Route path="conversations" element={<ConversationsPage />} />
-        <Route path="conversations/:id" element={<ConversationDetails />} />
+        <Route
+          path="conversations/:id"
+          element={<ConversationDetails />}
+        />
+
+        {/* LEADS */}
+        <Route path="leads" element={<LeadsPage />} />
+
+        <Route path="leads" element={<LeadsPage />} />
+<Route path="conversations/:id" element={<ConversationDetails />} />
+
 
         {/* SETTINGS */}
         <Route path="settings" element={<SettingsPage />} />
