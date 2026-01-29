@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Mail,
   Phone,
@@ -7,270 +7,194 @@ import {
   Users,
   CheckCircle,
   Percent,
+  Loader2,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { UI } from "@/ui/colors";
-
-/* ================= TYPES ================= */
-
-type LeadStatus = "Qualified" | "Unqualified";
-
-interface Lead {
-  conversation_id: string;
-  name: string;
-  email: string;
-  phone: string;
-  business_description: string;
-  status: LeadStatus;
-}
-
-/* ================= DUMMY DATA ================= */
-
-const DUMMY_LEADS: Lead[] = [
-  {
-    conversation_id: "conv_001",
-    name: "Kumar Patil",
-    email: "kumar@gmail.com",
-    phone: "+91 9876543210",
-    business_description:
-      "Managing school students and academic administration services.",
-    status: "Qualified",
-  },
-  {
-    conversation_id: "conv_002",
-    name: "Ayesha Khan",
-    email: "ayesha@startup.io",
-    phone: "+91 9123456789",
-    business_description:
-      "Running a digital marketing agency focused on local businesses.",
-    status: "Qualified",
-  },
-  {
-    conversation_id: "conv_003",
-    name: "Rahul Deshmukh",
-    email: "rahul@realestate.com",
-    phone: "-",
-    business_description:
-      "Real estate consulting for residential and commercial properties.",
-    status: "Unqualified",
-  },
-];
-
-/* ================= HELPERS ================= */
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-}
-
-function statusStyles(status: LeadStatus) {
-  return status === "Qualified"
-    ? "bg-green-100 text-green-700"
-    : "bg-yellow-100 text-yellow-700";
-}
-
-/* ================= PAGE ================= */
+import leadsApi from "@/api/leads";
+import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
+import type { Lead } from "@/types/lead.types";
 
 export function LeadsPage() {
-  const navigate = useNavigate();
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const filteredLeads = DUMMY_LEADS.filter(
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchLeads() {
+      setLoading(true);
+      const data = await leadsApi.getLeads();
+      setLeads(data);
+      setLoading(false);
+    }
+    fetchLeads();
+  }, []);
+
+  const filteredLeads = leads.filter(
     (l) =>
       l.name.toLowerCase().includes(search.toLowerCase()) ||
       l.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalLeads = DUMMY_LEADS.length;
-  const qualifiedLeads = DUMMY_LEADS.filter(
+  const qualifiedCount = leads.filter(
     (l) => l.status === "Qualified"
   ).length;
 
   const conversionRate =
-    totalLeads === 0
+    leads.length === 0
       ? 0
-      : Math.round((qualifiedLeads / totalLeads) * 100);
+      : Math.round((qualifiedCount / leads.length) * 100);
 
   return (
-    <div className="space-y-8">
-      {/* ================= HEADER ================= */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Leads
-          </h1>
-          <p
-            className="mt-1 text-base"
-            style={{ color: UI.colors.text.muted }}
-          >
-            Captured automatically by your AI avatar
-          </p>
+    <>
+      {/* ================= MAIN CONTENT (PUSHES LEFT) ================= */}
+      <div
+        className="space-y-8 transition-all duration-300"
+        style={{ marginRight: drawerOpen ? "420px" : "0px" }}
+      >
+        {/* HEADER */}
+        <div className="flex justify-between items-start gap-6">
+          <div>
+            <h1 className="text-3xl font-bold">Leads</h1>
+            <p className="text-gray-500">
+              Captured automatically by your AI avatar
+            </p>
+          </div>
+
+          {/* SEARCH */}
+          <div className="flex items-center gap-3 px-4 h-11 rounded-xl border bg-white shadow-sm">
+            <Search size={18} className="text-gray-500" />
+            <input
+              placeholder="Search leads"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="outline-none bg-transparent text-sm w-48"
+            />
+          </div>
         </div>
 
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl"
-          style={{
-            background: UI.colors.surface.glassSm,
-            border: `1px solid ${UI.colors.border.glass}`,
-          }}
-        >
-          <Search size={16} />
-          <input
-            placeholder="Search leads..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent outline-none text-sm"
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <KpiCard
+            label="Total Leads"
+            value={leads.length}
+            icon={<Users size={18} />}
+          />
+          <KpiCard
+            label="Qualified Leads"
+            value={qualifiedCount}
+            icon={<CheckCircle size={18} />}
+          />
+          <KpiCard
+            label="Conversion Rate"
+            value={`${conversionRate}%`}
+            icon={<Percent size={18} />}
           />
         </div>
-      </div>
 
-      {/* ================= KPI CARDS ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          icon={<Users size={18} />}
-          label="Total Leads"
-          value={totalLeads}
-        />
-        <StatCard
-          icon={<CheckCircle size={18} />}
-          label="Qualified Leads"
-          value={qualifiedLeads}
-        />
-        <StatCard
-          icon={<Percent size={18} />}
-          label="Conversion Rate"
-          value={`${conversionRate}%`}
-        />
-      </div>
+        {/* LEADS LIST */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin" />
+          </div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="text-center py-20 text-gray-500 text-sm">
+            No leads found
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredLeads.map((lead) => (
+              <div
+                key={lead.conversation_id}
+                onClick={() => {
+                  setSelectedLead(lead);
+                  setDrawerOpen(true);
+                }}
+                className="
+                  flex items-center justify-between
+                  bg-white border rounded-xl
+                  px-4 py-3
+                  cursor-pointer
+                  transition
+                  hover:bg-gray-50
+                  hover:shadow-sm
+                "
+              >
+                {/* LEFT: AVATAR + NAME */}
+                <div className="flex items-center gap-3 min-w-[260px]">
+                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold">
+                    {lead.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
 
-      {/* ================= TABLE HEADER ================= */}
-      <div
-        className="grid grid-cols-12 px-5 py-3 text-xs font-semibold uppercase tracking-wide"
-        style={{ color: UI.colors.text.muted }}
-      >
-        <div className="col-span-3">Lead</div>
-        <div className="col-span-3">Email</div>
-        <div className="col-span-2">Phone</div>
-        <div className="col-span-2">Status</div>
-        <div className="col-span-1 text-right">Chat</div>
-      </div>
-
-      {/* ================= LEADS LIST ================= */}
-      {filteredLeads.length === 0 ? (
-        <div className="text-center py-16 text-sm text-gray-500">
-          🤖 Your AI hasn’t captured any leads yet
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredLeads.map((lead) => (
-            <div
-              key={lead.conversation_id}
-              onClick={() =>
-                navigate(
-                  `/dashboard/conversations/${lead.conversation_id}`
-                )
-              }
-              className="grid grid-cols-12 items-center px-5 py-4 rounded-2xl cursor-pointer transition-all hover:-translate-y-[1px]"
-              style={{
-                background: UI.colors.surface.glassSm,
-                boxShadow:
-                  "inset 0 0 0 1px rgba(0,0,0,0.05), 0 10px 24px rgba(0,0,0,0.06)",
-              }}
-            >
-              {/* NAME */}
-              <div className="col-span-3 flex items-center gap-3">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                  style={{
-                    background: UI.colors.primary + "20",
-                    color: UI.colors.primary,
-                  }}
-                >
-                  {getInitials(lead.name)}
+                  <div className="leading-tight">
+                    <p className="font-medium">{lead.name}</p>
+                    <p className="text-xs text-gray-500 truncate max-w-[180px]">
+                      {lead.email}
+                    </p>
+                  </div>
                 </div>
-                <span className="font-semibold">
-                  {lead.name}
-                </span>
-              </div>
 
-              {/* EMAIL */}
-              <div className="col-span-3 flex items-center gap-2 text-sm">
-                <Mail size={14} className="opacity-60" />
-                {lead.email}
-              </div>
+                {/* PHONE */}
+                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 w-[180px]">
+                  <Phone size={14} />
+                  <span className="whitespace-nowrap">
+                    {lead.phone}
+                  </span>
+                </div>
 
-              {/* PHONE */}
-              <div className="col-span-2 flex items-center gap-2 text-sm">
-                <Phone size={14} className="opacity-60" />
-                {lead.phone}
-              </div>
-
-              {/* STATUS */}
-              <div className="col-span-2">
+                {/* STATUS */}
                 <span
-                  className={`text-xs px-3 py-1 rounded-full font-medium ${statusStyles(
-                    lead.status
-                  )}`}
+                  className={`text-xs px-3 py-1 rounded-full font-medium ${
+                    lead.status === "Qualified"
+                      ? "bg-green-50 text-green-700"
+                      : "bg-yellow-50 text-yellow-700"
+                  }`}
                 >
                   {lead.status}
                 </span>
-              </div>
 
-              {/* ACTION */}
-              <div className="col-span-1 flex justify-end">
-                <div
-                  className="p-2 rounded-full"
-                  style={{
-                    background: UI.colors.primary + "15",
-                    color: UI.colors.primary,
-                  }}
-                >
+                {/* ACTION */}
+                <div className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-500">
                   <MessageSquare size={16} />
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ================= DRAWER ================= */}
+      <LeadDetailsDrawer
+        lead={selectedLead}
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
+    </>
   );
 }
 
-/* ================= STAT CARD ================= */
+/* ================= KPI CARD ================= */
 
-function StatCard({
-  icon,
+function KpiCard({
   label,
   value,
+  icon,
 }: {
-  icon: React.ReactNode;
   label: string;
   value: string | number;
+  icon: React.ReactNode;
 }) {
   return (
-    <div
-      className="rounded-2xl px-5 py-4 flex items-center gap-4"
-      style={{
-        background: UI.colors.surface.glassSm,
-        border: `1px solid ${UI.colors.border.glass}`,
-      }}
-    >
-      <div
-        className="p-3 rounded-xl"
-        style={{
-          background: UI.colors.primary + "15",
-          color: UI.colors.primary,
-        }}
-      >
+    <div className="bg-white border rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+      <div className="p-3 rounded-xl bg-gray-100">
         {icon}
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wide text-gray-500">
-          {label}
-        </p>
+        <p className="text-xs text-gray-500">{label}</p>
         <p className="text-xl font-semibold">{value}</p>
       </div>
     </div>
