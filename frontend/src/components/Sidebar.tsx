@@ -1,33 +1,43 @@
-import { Home, MessageSquare, Settings, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Home, MessageSquare, Settings, LogOut, Users } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import SidebarLogo from "./SideBarLogo";
-
-// import logoIcon from "@/assets/logo.png";
-// import logoText from "@/assets/voicedots.png";
 
 interface SidebarProps {
   isOpen: boolean; // mobile
   onClose: () => void;
-  currentPage?: string;
-  onNavigate?: (page: string) => void;
   isCollapsed: boolean; // desktop
 }
 
 export function Sidebar({
   isOpen,
   onClose,
-  currentPage,
-  onNavigate,
   isCollapsed,
 }: SidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
 
   const navItems = [
-    { id: "home", icon: Home, label: "Home" },
-    { id: "conversations", icon: MessageSquare, label: "Conversations" },
-    { id: "settings", icon: Settings, label: "Settings" },
+    { id: "home", icon: Home, label: "Home", path: "/dashboard" },
+    {
+      id: "conversations",
+      icon: MessageSquare,
+      label: "Conversations",
+      path: "/dashboard/conversations",
+    },
+    {
+      id: "leads",
+      icon: Users,
+      label: "Leads",
+      path: "/dashboard/leads",
+    },
+    {
+      id: "settings",
+      icon: Settings,
+      label: "Settings",
+      path: "/dashboard/settings",
+    },
   ];
 
   return (
@@ -50,15 +60,18 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full py-6">
           {/* Logo */}
-          <SidebarLogo 
-          isCollapsed={isCollapsed} 
-          onClose={onClose} 
-        />
+          <SidebarLogo
+            isCollapsed={isCollapsed}
+            onClose={onClose}
+          />
 
           {/* Navigation */}
           <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = currentPage === item.id;
+              const isActive =
+                item.path === "/dashboard"
+                  ? location.pathname === "/dashboard"
+                  : location.pathname.startsWith(item.path);
 
               return (
                 <button
@@ -66,14 +79,7 @@ export function Sidebar({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-
-                    if (item.id === "home") {
-                      navigate("/dashboard");
-                    } else {
-                      navigate(`/dashboard/${item.id}`);
-                    }
-
-                    onNavigate?.(item.id);
+                    navigate(item.path);
                     onClose();
                   }}
                   className={`w-full flex items-center gap-x-3.5 py-3 px-4 text-sm rounded-lg transition-colors
