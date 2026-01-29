@@ -1,0 +1,1 @@
+REQUIRED_LEAD_DATA_PARAMETERS = ["name", "email", "phone_number", "business_desc"]
