@@ -7,6 +7,7 @@ logger = get_logger("Conversation Filter")
 def get_avatar(tool_calls_list: list):
     try:
         if tool_calls_list:
+            logger.info("Reading Avatar from list")
             for tool in tool_calls_list:
                 if tool.tool_name == "glowAvatar":
                     params_json = tool.params_as_json
@@ -16,7 +17,7 @@ def get_avatar(tool_calls_list: list):
                     params = json.loads(params_json)
                     return params.get("name")
 
-        return None
+        return "SRK"
     except Exception as e:
         logger.error(f"Error in extracting tool calls avatar: {e}")
         return None
@@ -25,11 +26,10 @@ def get_lead_data(analysis_data: dict):
     try:
         if not analysis_data:
             return None
-        logger.info(f"Analysis data received for lead extraction: {analysis_data}")
         lead_info = analysis_data.data_collection_results_list
         if not lead_info:
             return None
-        logger.info(f"Lead info extracted: {lead_info}")
+        
         lead_collected = dict()
         for data in lead_info:
             field = data.data_collection_id
@@ -57,13 +57,10 @@ def conversations_filter(conversations_list: dict):
                 "call_status": conv.call_successful,
             })
 
-        filtered_conversations.append({
-            "next_page": conversations_list.next_cursor
-            if conversations_list.has_more
-            else None
-        })
-
-        return filtered_conversations
+        if conversations_list.has_more:
+            return filtered_conversations, conversations_list.next_cursor
+        else:
+            return filtered_conversations, None
 
     except Exception as e:
         logger.error(f"Error in filtering conversations: {e}")
@@ -83,11 +80,8 @@ def conversation_detail_filter(conversation_detail: dict):
             })
             
         lead_data = get_lead_data(conversation_detail.analysis)
-        filtered_conversation_details.append({
-            "lead": lead_data
-        })
         
-        return filtered_conversation_details
+        return filtered_conversation_details, lead_data
     except Exception as e:
         logger.error(f"Error in filtering conversation details: {e}")
         raise

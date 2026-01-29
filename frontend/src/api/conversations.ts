@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ConversationSummary, ConversationDetail, GetConversationsResponse, ConversationDetailsResponse } from '@/types/conversation.types';
+import type { GetConversationsListResult, GetConversationsResponse, GetConversationDetailsResult, GetConversationDetailsResponse } from '@/types/conversation.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -23,24 +23,29 @@ const conversationsApi = {
   //   }
   // },
 
-  getConversations: async (agentId?: string): Promise<ConversationSummary[]> => {
+  getConversations: async (agentId?: string | null, cursor?: string | null): Promise<GetConversationsListResult> => {
     try {
-      const params = agentId ? { agent_id: agentId } : {};
+      const params = agentId ? { agent_id: null, cursor: cursor } : { cursor: cursor };
       const response = await apiClient.get<GetConversationsResponse>('/v1/conversations', { 
         params 
       });
-      return response.data.data.conversations;
+      return {
+        conversations: response.data.data,
+        nextPage: response.data.next_page
+      };
     } catch (error) {
       console.error('Error fetching conversations:', error);
       throw error;
     }
   },
 
-  getConversationDetails: async (conversationId: string): Promise<ConversationDetail[]> => {
+  getConversationDetails: async (conversationId: string): Promise<GetConversationDetailsResult> => {
     try {
-      const response = await apiClient.get<ConversationDetailsResponse>(`/v1/conversations/${conversationId}`);
-      console.log(response.data.data.transcript)
-      return response.data.data.transcript;
+      const response = await apiClient.get<GetConversationDetailsResponse>(`/v1/conversations/${conversationId}`);
+      return {
+        transcription: response.data.data,
+        lead: response.data.lead
+      };
     } catch (error) {
       console.error(`Error fetching details for conversation ${conversationId}:`, error);
       throw error;

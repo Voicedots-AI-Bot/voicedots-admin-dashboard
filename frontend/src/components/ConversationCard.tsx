@@ -1,17 +1,18 @@
 import { MessageSquare, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { UI } from "@/ui/colors";
-import type { ConversationSummary } from "@/types/conversation.types";
+import type { ConversationsListSummary } from "@/types/conversation.types";
 
 interface ConversationCardProps {
-  conversation: ConversationSummary;
+  conversation: ConversationsListSummary;
+  index: number;
 }
 
-export function ConversationCard({ conversation }: ConversationCardProps) {
+export function ConversationCard({ conversation, index }: ConversationCardProps) {
   const navigate = useNavigate();
 
   const isSuccess =
-    conversation.status === "done" || conversation.status === "success";
+    conversation.call_status === "done" || conversation.call_status === "success";
 
   const statusStyle = isSuccess
     ? {
@@ -44,20 +45,21 @@ export function ConversationCard({ conversation }: ConversationCardProps) {
             rgba(255,255,255,0.85)
           )
         `,
-        boxShadow: `
-          inset 0 0 0 1px rgba(0,0,0,0.05),
-          0 8px 24px rgba(0,0,0,0.06)
-        `,
+        boxShadow: UI.colors.shadow.sm,
       }}
     >
       <div className="flex items-center justify-between gap-4">
+        {/* INDEX */}
+        <span className="font-bold text-gray-500">
+          {index}.
+        </span>
         {/* LEFT CONTENT */}
         <div className="min-w-0 flex-1">
           <p
-            className="truncate text-[15px] font-semibold tracking-tight"
+            className="truncate text-[18px] font-semibold tracking-tight"
             style={{ color: UI.colors.text.primary }}
           >
-            {conversation.call_summary_title ?? "Untitled Conversation"}
+            {conversation.title ?? "Untitled Conversation"}
           </p>
 
           <p

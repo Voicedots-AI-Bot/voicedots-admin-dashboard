@@ -1,57 +1,52 @@
-export interface ConversationSummary {
-  agent_id: string,
-  branch_id: string,
-  version_id: string,
-  agent_name: string,
-  conversation_id: string,
-  start_time_unix_secs: number,
-  call_duration_secs: number,
-  message_count: number,
-  status: string,
-  call_successful: string,
-  call_summary_title: string,
-  transcript_summary: null,
-  direction: null,
-  rating: null
-}
-
-export interface ConversationDetail {
-  role: "agent" | "user";
-  message: string | null;
-  original_message: string | null;
-  time_in_call_secs: number;
-  interrupted: boolean;
-  source_medium: string | null;
-  agent_metadata: {
-    agent_id: string;
-    branch_id: string;
-    workflow_node_id: string;
-  } | null;
-  tool_calls: Array<Record<string, unknown>>;
-  tool_results: Array<Record<string, unknown>>;
-  conversation_turn_metrics: unknown | null;
-  rag_retrieval_info: unknown | null;
-  llm_usage: unknown | null;
-  multivoice_message: unknown | null;
-  feedback: unknown | null;
-  llm_override: unknown | null;
-}
-
-export interface Agent {
-  agent_id: string;
-  name: string;
+// CONVERSATIONS LIST TYPES
+export interface ConversationsListSummary {
+  conversation_id: string;
+  title: string;
+  duration: number;
+  message_count: number;
+  call_status: string;
 }
 
 export interface GetConversationsResponse {
   status: string;
-  data: {
-    conversations: ConversationSummary[];
-    has_more?: boolean;
-    next_cursor?: string | null;
-  };
+  data: ConversationsListSummary[];
+  next_page: string | null;
+}
+export interface GetConversationsListResult {
+  conversations: ConversationsListSummary[];
+  nextPage: string | null;
 }
 
-export interface ConversationDetailsResponse {
+
+// CONVERSATION DETAILS AND TRANSCRIPT TYPES
+export interface ConversationDetailsSummary {
+  role: "agent" | "user";
+  message: string | null;
+  avatar: string | null;
+  timestamp: number;
+  interrupted: boolean;
+}
+
+interface LeadDetails {
+  name: string;
+  email: string;
+  phone_number: string;
+  business_desc: string;
+}
+export interface GetConversationDetailsResponse {
   status: string;
-  data: Record<string, string | ConversationDetail | any>;
+  data: ConversationDetailsSummary[];
+  lead: LeadDetails | null;
+}
+
+export interface GetConversationDetailsResult {
+  transcription: ConversationDetailsSummary[];
+  lead: LeadDetails | null;
+}
+
+// AGENT TYPES
+
+export interface Agent {
+  agent_id: string;
+  name: string;
 }
