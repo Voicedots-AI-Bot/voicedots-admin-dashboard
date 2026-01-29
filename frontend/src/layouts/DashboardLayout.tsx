@@ -9,11 +9,11 @@ const DashboardLayout = () => {
   const location = useLocation();
 
   /**
-   * IMPORTANT:
-   * /dashboard                -> home
-   * /dashboard/conversations  -> conversations
+   * ROUTE MAPPING
+   * /dashboard                 -> home
+   * /dashboard/conversations   -> conversations
    * /dashboard/conversations/5 -> conversations
-   * /dashboard/settings       -> settings
+   * /dashboard/settings        -> settings
    */
   const pathParts = location.pathname.split("/");
 
@@ -31,7 +31,7 @@ const DashboardLayout = () => {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         isCollapsed={isCollapsed}
-        currentPage={currentPage}
+        // currentPage={currentPage}
       />
 
       <div className="flex flex-col flex-1 w-full overflow-hidden">
@@ -40,16 +40,15 @@ const DashboardLayout = () => {
           onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
         />
 
-        {/* Page Content */}
         <main
-  className={`flex-1 overflow-y-auto ${
-    location.pathname.startsWith("/dashboard/conversations/")
-      ? "p-0"
-      : "p-4 md:p-8"
-  }`}
->
-  <Outlet />
-</main>
+          className={`flex-1 overflow-y-auto ${
+            location.pathname.startsWith("/dashboard/conversations/")
+              ? "p-0"
+              : "p-4 md:p-8"
+          }`}
+        >
+          <Outlet />
+        </main>
       </div>
     </div>
   );
