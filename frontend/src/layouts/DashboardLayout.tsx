@@ -8,40 +8,30 @@ const DashboardLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
-  /**
-   * ROUTE MAPPING
-   * /dashboard                 -> home
-   * /dashboard/conversations   -> conversations
-   * /dashboard/conversations/5 -> conversations
-   * /dashboard/settings        -> settings
-   */
-  const pathParts = location.pathname.split("/");
-
-  let currentPage: "home" | "conversations" | "settings" = "home";
-
-  if (pathParts.includes("conversations")) {
-    currentPage = "conversations";
-  } else if (pathParts.includes("settings")) {
-    currentPage = "settings";
-  }
-
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950">
+      {/* SIDEBAR */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         isCollapsed={isCollapsed}
-        // currentPage={currentPage}
       />
 
+      {/* MAIN COLUMN */}
       <div className="flex flex-col flex-1 w-full overflow-hidden">
+        {/* TOP BAR (FIXED HEIGHT) */}
         <TopBar
           onMenuClick={() => setIsSidebarOpen(true)}
           onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
         />
 
+        {/* 
+          IMPORTANT:
+          - NO overflow here
+          - NO scrolling here
+        */}
         <main
-          className={`flex-1 overflow-y-auto ${
+          className={`flex-1 overflow-hidden ${
             location.pathname.startsWith("/dashboard/conversations/")
               ? "p-0"
               : "p-4 md:p-8"

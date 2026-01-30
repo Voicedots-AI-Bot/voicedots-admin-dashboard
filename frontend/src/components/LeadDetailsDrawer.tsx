@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { X, Phone, Mail, MessageSquare } from "lucide-react";
+import {
+  X,
+  Phone,
+  Mail,
+  MessageCircle,
+} from "lucide-react";
 import type { Lead } from "@/types/lead.types";
 
 const TOPBAR_HEIGHT = 64;
@@ -36,73 +41,54 @@ export function LeadDetailsDrawer({
   return (
     <div
       className="
-        fixed right-0
-        w-[420px]
-        bg-white
-        border-l
-        shadow-2xl
-        z-50
+        fixed right-0 bottom-0
+        bg-white border-l shadow-2xl z-50
         flex flex-col
+        w-full sm:w-[420px]
       "
       style={{
         top: `${TOPBAR_HEIGHT}px`,
         height: `calc(100vh - ${TOPBAR_HEIGHT}px)`,
       }}
     >
-      {/* ================= HEADER WITH AVATAR ================= */}
-      <div className="px-6 py-5 border-b flex items-start justify-between gap-4">
-        <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-sm">
+      {/* ================= STICKY HEADER ================= */}
+      <div className="sticky top-0 z-10 bg-white border-b px-5 py-4 flex items-start justify-between">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold">
             {getInitials(lead.name)}
           </div>
-
-          {/* Name & Email */}
           <div>
-            <h2 className="font-semibold text-lg leading-tight">
-              {lead.name}
-            </h2>
-            <p className="text-sm text-gray-500">
-              {lead.email}
-            </p>
+            <p className="font-semibold leading-tight">{lead.name}</p>
+            <p className="text-xs text-gray-500">{lead.email}</p>
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          className="p-1 rounded hover:bg-gray-100"
-        >
+        <button onClick={onClose} className="p-1">
           <X size={18} />
         </button>
       </div>
 
-      {/* ================= STATUS ================= */}
-      <div className="px-6 py-3 border-b">
+      {/* ================= STICKY STATUS ================= */}
+      <div className="sticky top-[73px] z-10 bg-white border-b px-5 py-3">
         <select
-          defaultValue={lead.status}
-          className="
-            border rounded-lg
-            px-3 py-1.5
-            text-sm
-            outline-none
-            focus:ring-2 focus:ring-black/10
-          "
+          value={lead.status}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
         >
-          <option>Qualified</option>
-          <option>Unqualified</option>
-          <option>Follow Up</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Unqualified">Unqualified</option>
+          <option value="Follow Up">Follow Up</option>
         </select>
       </div>
 
-      {/* ================= ACTIONS ================= */}
-      <div className="px-6 py-4 grid grid-cols-3 gap-3 border-b">
-        <Action icon={<Phone size={16} />} label="Call" />
+      {/* ================= STICKY ACTIONS ================= */}
+      <div className="sticky top-[130px] z-10 bg-white border-b px-5 py-4 grid grid-cols-3 gap-3">
+        <Action icon={<Phone size={16} />} label="Call" disabled />
         <Action icon={<Mail size={16} />} label="Email" />
-        <Action icon={<MessageSquare size={16} />} label="Chat" />
+        <Action icon={<MessageCircle size={16} />} label="WhatsApp" />
       </div>
 
-      {/* ================= TABS ================= */}
-      <div className="flex px-6 border-b">
+      {/* ================= STICKY TABS ================= */}
+      <div className="sticky top-[200px] z-10 bg-white border-b px-5 flex gap-4">
         {[
           ["details", "Details"],
           ["notes", "Notes"],
@@ -112,31 +98,26 @@ export function LeadDetailsDrawer({
           <button
             key={key}
             onClick={() => setTab(key as any)}
-            className={`
-              py-3 px-3 text-sm transition
-              ${
-                tab === key
-                  ? "border-b-2 border-black font-semibold text-black"
-                  : "text-gray-500 hover:text-black"
-              }
-            `}
+            className={`py-3 text-sm ${
+              tab === key
+                ? "border-b-2 border-black font-semibold"
+                : "text-gray-500"
+            }`}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* ================= CONTENT ================= */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 text-sm">
+      {/* ================= SCROLLABLE CONTENT ================= */}
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 text-sm">
         {tab === "details" && (
           <>
             <InfoRow label="Phone" value={lead.phone} />
             <InfoRow label="Email" value={lead.email} />
 
             <div>
-              <p className="text-gray-500 mb-1">
-                Business Description
-              </p>
+              <p className="text-gray-500 mb-1">Business Description</p>
               <p className="text-gray-700 leading-relaxed">
                 {lead.business_description}
               </p>
@@ -146,25 +127,17 @@ export function LeadDetailsDrawer({
 
         {tab === "notes" && (
           <textarea
-            placeholder="Add internal notes for this lead..."
+            placeholder="Add internal notes..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="
-              w-full h-40
-              border rounded-lg
-              p-3 text-sm
-              outline-none
-              resize-none
-              focus:ring-2 focus:ring-black/10
-            "
+            className="w-full h-40 border rounded-lg p-3 text-sm resize-none"
           />
         )}
 
         {tab === "activity" && (
           <ul className="space-y-3 text-gray-600">
-            <li> Call attempted — Today 3:10 PM</li>
-            <li> AI conversation completed</li>
-            <li> Lead marked Qualified</li>
+            <li>• AI conversation completed</li>
+            <li>• Lead status: {lead.status}</li>
           </ul>
         )}
 
@@ -175,38 +148,28 @@ export function LeadDetailsDrawer({
             </label>
             <input
               type="datetime-local"
-              className="
-                border rounded-lg
-                px-3 py-2
-                text-sm w-full
-                outline-none
-                focus:ring-2 focus:ring-black/10
-              "
+              className="border rounded-lg px-3 py-2 w-full text-sm"
             />
           </div>
         )}
       </div>
 
-      {/* ================= BOTTOM CTA ================= */}
-      <div className="border-t px-6 py-4 bg-white">
-        <p className="text-xs text-gray-500 mb-2">
-          Next Suggested Action
-        </p>
+      {/* ================= STICKY FOOTER ================= */}
+      <div className="border-t px-5 py-4 bg-white">
+        <p className="text-xs text-gray-500 mb-2">Next Suggested Action</p>
 
         <div className="flex gap-3">
-          <button className="flex-1 border rounded-lg py-2 text-sm hover:bg-gray-50">
+          <button className="flex-1 border rounded-lg py-2 text-sm">
             Schedule Call
           </button>
-          <button className="flex-1 border rounded-lg py-2 text-sm hover:bg-gray-50">
-            Send Email
+          <button className="flex-1 border rounded-lg py-2 text-sm">
+            Send WhatsApp
           </button>
         </div>
 
         <div className="mt-3 text-xs text-gray-500">
           Last AI Call:{" "}
-          <span className="text-gray-700">
-            4m 32s · Qualified
-          </span>
+          <span className="text-gray-700">4m 32s · {lead.status}</span>
         </div>
       </div>
     </div>
@@ -218,20 +181,20 @@ export function LeadDetailsDrawer({
 function Action({
   icon,
   label,
+  disabled,
 }: {
   icon: React.ReactNode;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <button
-      className="
-        border rounded-xl
-        py-3
-        flex flex-col items-center gap-1
-        text-sm
-        hover:bg-gray-50
-        transition
-      "
+      disabled={disabled}
+      className={`border rounded-xl py-3 flex flex-col items-center gap-1 text-sm ${
+        disabled
+          ? "bg-gray-100 text-gray-400"
+          : "hover:bg-gray-50"
+      }`}
     >
       {icon}
       <span>{label}</span>
@@ -249,9 +212,7 @@ function InfoRow({
   return (
     <div className="flex justify-between">
       <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900">
-        {value}
-      </span>
+      <span className="font-medium">{value}</span>
     </div>
   );
 }

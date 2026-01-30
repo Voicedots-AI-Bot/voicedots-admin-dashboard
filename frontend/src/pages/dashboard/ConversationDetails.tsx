@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { 
-  ArrowLeft, 
-  Loader2, 
-  User, 
-  Phone, 
-  Mail, 
-  Briefcase, 
+import {
+  ArrowLeft,
+  Loader2,
+  User,
+  Phone,
+  Mail,
+  Briefcase,
   AlertCircle,
+  FileText,
+  Clock,
+  PhoneCall,
+  X,
 } from "lucide-react";
 import conversationsApi from "@/api/conversations";
 import { UI } from "@/ui/colors";
@@ -16,31 +20,27 @@ import logoIcon from "@/assets/logo.png";
 import { ConversationAudioPlayer } from "@/components/ConversationAudioPlayer";
 import voiceMp3 from "@/utils/voice.mp3";
 
-const formatTime = (timestamp: number) => {
+const formatTime = (timestamp?: number) => {
   if (!timestamp) return "";
-  const date = new Date(timestamp > 10000000000 ? timestamp : timestamp * 1000); 
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const date = new Date(timestamp > 1e10 ? timestamp : timestamp * 1000);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
 export function ConversationDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  
   const [data, setData] = useState<GetConversationDetailsResult | null>(null);
-
-  const audioUrl = voiceMp3;
+  const [showMobileInfo, setShowMobileInfo] = useState(false);
 
   useEffect(() => {
     async function fetchConversationDetails() {
       try {
         setIsLoading(true);
         if (id) {
-          const response = await conversationsApi.getConversationDetails(id);
-          setData(response);
+          const res = await conversationsApi.getConversationDetails(id);
+          setData(res);
         }
-      } catch (error) {
-        console.error("Failed to load conversation details:", error);
       } finally {
         setIsLoading(false);
       }
@@ -52,169 +52,193 @@ export function ConversationDetails() {
   const messages = data?.transcription;
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      {/* --- TOP NAV --- */}
-      <div className="border-b border-gray-200 px-4 py-3 bg-white sticky top-0 z-10">
+    <div className="h-full flex flex-col bg-white overflow-hidden">
+      {/* BACK */}
+      <div className="border-b px-4 py-3 shrink-0 flex justify-between items-center">
         <button
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-sm text-gray-600"
         >
-          <div className="p-1 rounded-full group-hover:bg-gray-100">
-             <ArrowLeft size={16} />
-          </div>
-          Back to Conversations
+          <ArrowLeft size={16} />
+          Back
+        </button>
+
+        {/* MOBILE INFO BUTTON */}
+        <button
+          onClick={() => setShowMobileInfo(true)}
+          className="md:hidden text-sm font-medium text-blue-600"
+        >
+          Lead Info
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
-          {/* --- HEADER SECTION --- */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6 mb-8">
-            <div className="flex-1">
-              <div 
-                className="pl-4" 
-                style={{ borderLeft: `4px solid ${UI.colors.primary}` }}
-              >
-                <h1 className="text-2xl font-bold text-gray-800">Transcript Details</h1>
-                <p className="text-sm text-gray-500 mt-1 font-mono">ID: {id}</p>
+      {/* TITLE */}
+      <div className="border-b px-4 py-3 shrink-0 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="pl-3" style={{ borderLeft: `4px solid ${UI.colors.primary}` }}>
+          <h1 className="text-lg md:text-xl font-bold">Transcript Details</h1>
+          <p className="text-xs text-gray-500 font-mono truncate">
+            ID: {id}
+          </p>
+        </div>
+
+        <ConversationAudioPlayer audioUrl={voiceMp3} />
+      </div>
+
+      {/* BODY */}
+      <div className="flex-1 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_260px] h-full">
+          {/* CHAT */}
+          <div className="overflow-y-auto px-4 md:px-6 py-4">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="flex justify-center">
+                <span className="px-3 py-1 bg-gray-100 text-xs rounded-full">
+                  Conversation Start
+                </span>
               </div>
-            </div>
-            <div className="w-full md:w-auto">
-              <ConversationAudioPlayer audioUrl={audioUrl} />
-            </div>
-          </div>
 
-          {isLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <Loader2 className="animate-spin text-gray-400" size={32} />
-            </div>
-          ) : (
-            <>
-              {/* --- LEAD DETAILS CARD --- */}
-              {lead && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-8 shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <User size={16} className="text-gray-500" />
-                    Lead Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Name */}
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-medium mb-1">Full Name</span>
-                      <span className="text-sm font-semibold text-gray-900">{lead.name || "N/A"}</span>
-                    </div>
-
-                    {/* Phone */}
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-medium mb-1">Phone Number</span>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Phone size={14} className="text-gray-400" />
-                        {lead.phone_number || "N/A"}
-                      </div>
-                    </div>
-
-                    {/* Email */}
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-medium mb-1">Email Address</span>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Mail size={14} className="text-gray-400" />
-                        <span className="truncate" title={lead.email}>{lead.email || "N/A"}</span>
-                      </div>
-                    </div>
-
-                    {/* Business */}
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-medium mb-1">Business Context</span>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
-                        <Briefcase size={14} className="text-gray-400" />
-                        <span className="truncate" title={lead.business_desc}>
-                          {lead.business_desc || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+              {isLoading ? (
+                <div className="flex justify-center py-20">
+                  <Loader2 className="animate-spin" />
                 </div>
-              )}
-
-              {/* --- TRANSCRIPT --- */}
-              <div className="space-y-6 pb-10">
-                <div className="flex items-center justify-center mb-6">
-                  <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">
-                    Conversation Start
-                  </span>
-                </div>
-
-                {messages?.map((msg, index) => {
+              ) : (
+                messages?.map((msg, i) => {
                   const isAgent = msg.role === "agent";
                   if (!msg.message) return null;
 
                   return (
                     <div
-                      key={index}
-                      className={`flex gap-4 ${isAgent ? "flex-row" : "flex-row-reverse"}`}
+                      key={i}
+                      className={`flex gap-3 ${
+                        isAgent ? "flex-row" : "flex-row-reverse"
+                      }`}
                     >
-                      {/* Avatar */}
-                      <div className="flex-shrink-0 flex flex-col items-center">
-                         {isAgent ? (
-                           <img 
-                             src={logoIcon} 
-                             alt="Agent" 
-                             className="w-10 h-10 rounded-full border border-gray-200 bg-white object-contain p-1" 
-                           />
-                         ) : (
-                           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center border border-blue-200">
-                               <User size={18} className="text-blue-600" />
-                           </div>
-                         )}
-                      </div>
+                      {isAgent ? (
+                        <img src={logoIcon} className="w-9 h-9 rounded-full border p-1" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
+                          <User size={16} />
+                        </div>
+                      )}
 
-                      {/* Message Bubble */}
-                      <div className={`flex flex-col max-w-[75%] ${isAgent ? "items-start" : "items-end"}`}>
-                        
-                        {/* Sender Name & Time */}
-                        <div className="flex items-center gap-2 mb-1 px-1">
-                          <span className="text-xs font-semibold text-gray-700">
-                            {isAgent ? (msg.avatar || "Voicedots bots") : (lead?.name || "User")}
-                          </span>
-                          <span className="text-[10px] text-gray-400">
-                            {formatTime(msg.timestamp)}
-                          </span>
+                      <div className={`max-w-[80%]`}>
+                        <div className="text-xs text-gray-500 mb-1">
+                          {isAgent ? "SRK" : lead?.name || "User"} ·{" "}
+                          {formatTime(msg.timestamp)}
                         </div>
 
-                        {/* Bubble */}
                         <div
-                          className={`relative rounded-2xl px-5 py-3.5 shadow-sm text-sm leading-relaxed ${
+                          className={`rounded-xl px-4 py-2 text-sm ${
                             isAgent
-                              ? "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
-                              : "text-white rounded-tr-none"
+                              ? "bg-white border"
+                              : "text-white"
                           }`}
                           style={{
-                            backgroundColor: isAgent ? undefined : UI.colors.primary,
+                            backgroundColor: isAgent
+                              ? undefined
+                              : UI.colors.primary,
                           }}
                         >
                           {msg.message}
 
-                          {/* Interruption Indicator */}
                           {msg.interrupted && (
-                             <div className={`flex items-center gap-1.5 mt-2 text-xs font-medium ${
-                               isAgent ? "text-red-500" : "text-white/90"
-                             }`}>
-                               <AlertCircle size={12} />
-                               <span>Interrupted</span>
-                             </div>
+                            <div className="flex items-center gap-1 mt-1 text-xs text-red-500">
+                              <AlertCircle size={12} />
+                              Interrupted
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
                   );
-                })}
-              </div>
-            </>
-          )}
+                })
+              )}
+            </div>
+          </div>
+
+          {/* DESKTOP SIDEBAR */}
+          <aside className="hidden md:block border-l bg-gray-50 px-4 py-4">
+            <LeadInfo lead={lead} />
+          </aside>
         </div>
       </div>
+
+      {/* MOBILE BOTTOM SHEET */}
+      {showMobileInfo && (
+        <div className="fixed inset-0 z-50 bg-black/40 md:hidden">
+          <div className="absolute bottom-0 w-full bg-white rounded-t-xl p-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold">Lead Info</h3>
+              <button onClick={() => setShowMobileInfo(false)}>
+                <X />
+              </button>
+            </div>
+            <LeadInfo lead={lead} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ========== SHARED LEAD INFO ========== */
+
+function LeadInfo({ lead }: any) {
+  return (
+    <div className="space-y-4">
+      <div className="bg-white border rounded-lg">
+        <div className="flex gap-3 px-4 py-3 border-b">
+          <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
+            <User size={16} />
+          </div>
+          <div>
+            <p className="font-semibold">{lead?.name || "Unknown Lead"}</p>
+            <p className="text-xs text-gray-500">Inbound Call</p>
+          </div>
+        </div>
+
+        <InfoRow icon={<Phone size={14} />} label="Phone" value={lead?.phone_number || "N/A"} />
+        <InfoRow icon={<Mail size={14} />} label="Email" value={lead?.email || "N/A"} />
+        <InfoRow icon={<Briefcase size={14} />} label="Business" value={lead?.business_desc || "N/A"} />
+      </div>
+
+      <div className="bg-white border rounded-lg">
+        <div className="flex gap-2 px-4 py-3 border-b">
+          <FileText size={14} />
+          <p className="font-semibold text-sm">Call Summary</p>
+        </div>
+        <div className="px-4 py-3 space-y-2 text-sm">
+          <SummaryRow icon={<Clock size={14} />} label="Duration" value="3m 49s" />
+          <SummaryRow icon={<PhoneCall size={14} />} label="Outcome" value="No Response" />
+          <p className="text-xs text-gray-500">
+            User did not respond clearly. No lead qualification captured.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* HELPERS */
+
+function InfoRow({ icon, label, value }: any) {
+  return (
+    <div className="flex gap-3 px-4 py-2 text-sm">
+      <div className="text-gray-400">{icon}</div>
+      <div>
+        <p className="text-[11px] text-gray-500">{label}</p>
+        <p className="truncate">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ icon, label, value }: any) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span className="flex gap-2 text-gray-500">
+        {icon} {label}
+      </span>
+      <span className="font-medium">{value}</span>
     </div>
   );
 }

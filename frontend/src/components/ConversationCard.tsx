@@ -1,6 +1,5 @@
 import { MessageSquare, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { UI } from "@/ui/colors";
 import type { ConversationsListSummary } from "@/types/conversation.types";
 
 interface ConversationCardProps {
@@ -8,91 +7,85 @@ interface ConversationCardProps {
   index: number;
 }
 
-export function ConversationCard({ conversation, index }: ConversationCardProps) {
+export function ConversationCard({
+  conversation,
+  index,
+}: ConversationCardProps) {
   const navigate = useNavigate();
 
   const isSuccess =
-    conversation.call_status === "done" || conversation.call_status === "success";
+    conversation.call_status === "done" ||
+    conversation.call_status === "success";
 
-  const statusStyle = isSuccess
+  const status = isSuccess
     ? {
         label: "Successful",
-        bg: "rgba(34,197,94,0.15)",
-        text: "#16a34a",
-        accent: "#22c55e",
+        bg: "bg-green-50",
+        text: "text-green-700",
       }
     : {
-        label: "Error",
-        bg: "rgba(239,68,68,0.15)",
-        text: "#dc2626",
-        accent: "#ef4444",
+        label: "Unsuccessful",
+        bg: "bg-red-50",
+        text: "text-red-700",
       };
 
   return (
     <div
       onClick={() => navigate(`./${conversation.conversation_id}`)}
       className="
-        group cursor-pointer
-        rounded-2xl px-5 py-4
-        transition-all duration-200
-        hover:-translate-y-[1px]
+        cursor-pointer
+        rounded-xl
+        border border-gray-200
+        bg-white
+        px-6 py-4
+        transition
+        hover:bg-gray-50
       "
-      style={{
-        background: `
-          linear-gradient(
-            180deg,
-            rgba(255,255,255,0.95),
-            rgba(255,255,255,0.85)
-          )
-        `,
-        boxShadow: UI.colors.shadow.sm,
-      }}
     >
-      <div className="flex items-center justify-between gap-4">
-        {/* INDEX */}
-        <span className="font-bold text-gray-500">
-          {index}.
-        </span>
+      <div className="flex items-center justify-between gap-6">
         {/* LEFT CONTENT */}
         <div className="min-w-0 flex-1">
-          <p
-            className="truncate text-[18px] font-semibold tracking-tight"
-            style={{ color: UI.colors.text.primary }}
-          >
-            {conversation.title ?? "Untitled Conversation"}
-          </p>
-
-          <p
-            className="mt-1 text-xs font-mono truncate"
-            style={{ color: UI.colors.text.muted }}
-          >
-            ID: {conversation.conversation_id}
-          </p>
-        </div>
-
-        {/* RIGHT METADATA */}
-        <div className="flex items-center gap-5">
-          <div className="hidden sm:flex items-center gap-1 text-sm"
-            style={{ color: UI.colors.text.secondary }}
-          >
-            <MessageSquare size={15} />
-            {conversation.message_count}
+          {/* Title */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400 font-medium">
+              {index}.
+            </span>
+            <p className="truncate text-base font-semibold text-gray-900">
+              {conversation.title || "Untitled Conversation"}
+            </p>
           </div>
 
+          {/* Meta */}
+          <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
+            <span className="font-mono truncate">
+              ID: {conversation.conversation_id}
+            </span>
+
+            <div className="flex items-center gap-1">
+              <MessageSquare size={14} />
+              {conversation.message_count}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE */}
+        <div className="flex items-center gap-4 shrink-0">
+          {/* STATUS */}
           <span
-            className="rounded-full px-4 py-1 text-xs font-medium"
-            style={{
-              background: statusStyle.bg,
-              color: statusStyle.text,
-            }}
+            className={`
+              px-3 py-1
+              rounded-full
+              text-xs font-medium
+              ${status.bg} ${status.text}
+            `}
           >
-            {statusStyle.label}
+            {status.label}
           </span>
 
+          {/* ARROW */}
           <ChevronRight
             size={18}
-            className="opacity-40 transition group-hover:opacity-70"
-            style={{ color: UI.colors.text.muted }}
+            className="text-gray-400"
           />
         </div>
       </div>
