@@ -1,6 +1,10 @@
 from elevenlabs import AsyncElevenLabs
 from typing import Dict, Any
 from app.config.settings import settings
+from fastapi.responses import StreamingResponse
+from app.config.logger import get_logger
+
+logger = get_logger("ElevenLabsClient")
 
 class ElevenLabsClient:
     def __init__(self, api_key: str):
@@ -14,5 +18,10 @@ class ElevenLabsClient:
     
     async def get_conversation_details(self, conversation_id: str):
         return await self.client.conversational_ai.conversations.get(conversation_id)
+    
+    async def get_conversation_audio(self, conversation_id: str):
+        audio_stream = self.client.conversational_ai.conversations.audio.get(conversation_id)
+        return StreamingResponse(audio_stream, media_type="audio/mpeg")
+    
 
 elevenlabs_client = ElevenLabsClient(settings.ELEVENLABS_API_KEY)

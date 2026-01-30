@@ -75,3 +75,30 @@ async def get_conversation_details(
             status_code=500,
             detail=f"Failed to fetch conversation {conversation_id}: {str(e)}",
         )
+
+@router.get("/audio/{conversation_id}",
+    # response_model=ConversationDetailResponse,
+    summary="Get conversation audio",
+    description="Retrieve full conversation audio file"
+)
+async def get_conversation_audio(
+    conversation_id: str,
+    client: ElevenLabsClient = Depends(get_elevenlabs_client),
+):
+    try:
+        data = await client.get_conversation_audio(conversation_id)
+        logger.info(f"Successfully fetced conversation audio")
+        if data:
+            # filtered_data, lead = conversation_detail_filter(data)
+            # logger.info(f"Filtered conversations details successfully")
+            return data
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail="No conversation details found",
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch conversation {conversation_id}: {str(e)}",
+        )

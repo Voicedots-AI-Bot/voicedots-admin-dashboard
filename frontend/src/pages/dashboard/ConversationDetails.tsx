@@ -18,7 +18,6 @@ import { UI } from "@/ui/colors";
 import type { GetConversationDetailsResult } from "@/types/conversation.types";
 import logoIcon from "@/assets/logo.png";
 import { ConversationAudioPlayer } from "@/components/ConversationAudioPlayer";
-import voiceMp3 from "@/utils/voice.mp3";
 
 const formatTime = (timestamp?: number) => {
   if (!timestamp) return "";
@@ -32,14 +31,18 @@ export function ConversationDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<GetConversationDetailsResult | null>(null);
   const [showMobileInfo, setShowMobileInfo] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   useEffect(() => {
     async function fetchConversationDetails() {
       try {
         setIsLoading(true);
         if (id) {
-          const res = await conversationsApi.getConversationDetails(id);
-          setData(res);
+          const response = await conversationsApi.getConversationDetails(id);
+          setData(response);
+          const audioBlob = await conversationsApi.getConversationAudio(id);
+          const url = URL.createObjectURL(audioBlob);
+          setAudioUrl(url);
         }
       } finally {
         setIsLoading(false);
@@ -81,7 +84,7 @@ export function ConversationDetails() {
           </p>
         </div>
 
-        <ConversationAudioPlayer audioUrl={voiceMp3} />
+        <ConversationAudioPlayer audioUrl={audioUrl} />
       </div>
 
       {/* BODY */}

@@ -51,6 +51,19 @@ const conversationsApi = {
       throw error;
     }
   },
+
+  getConversationAudio: async (conversationId: string): Promise<Blob> => {
+    try {
+      const response = await apiClient.get(`/v1/conversations/audio/${conversationId}`, {
+        responseType: 'blob', 
+      });
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching audio for conversation ${conversationId}:`, error);
+      throw error;
+    }
+  },
 };
 
 export default conversationsApi;
