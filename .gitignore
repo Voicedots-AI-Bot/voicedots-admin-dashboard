@@ -15,6 +15,14 @@ yarn-debug.log*
 pnpm-debug.log*
 
 ############################
+# Virtual Environment
+############################
+venv/
+.venv/
+env/
+myenv/
+
+############################
 # Environment variables
 ############################
 .env
@@ -24,25 +32,11 @@ pnpm-debug.log*
 ############################
 # Frontend (Vite / Node)
 ############################
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
-frontend/.cache/
-frontend/.eslintcache
-
-############################
-# Backend (FastAPI / Python)
-############################
-backend/__pycache__/
-backend/*.pyc
-backend/*.pyo
-backend/*.pyd
-backend/.pytest_cache/
-backend/.mypy_cache/
-backend/.ruff_cache/
-backend/.venv/
-backend/venv/
-backend/env/
+node_modules/
+dist/
+.vite/
+.cache/
+.eslintcache
 
 ############################
 # Python build artifacts
@@ -70,3 +64,13 @@ coverage.xml
 ############################
 pnpm-lock.yaml
 yarn.lock
+
+############################
+# Python cache
+############################
+__pycache__/
+*.py[cod]
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
