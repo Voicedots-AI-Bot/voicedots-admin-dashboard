@@ -7,10 +7,25 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { ANALYTICS_DATA } from "@/utils/mockData";
+import { useEffect, useState } from "react";
+
+import conversationsApi from "@/api/conversations";
+import type { KpiSummary } from "@/types/conversation.types";
+// import { ANALYTICS_DATA } from "@/utils/mockData";
 import { UI } from "@/ui/colors";
 
 export function HomePage() {
+  const [kpis, setKpis] = useState<KpiSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    conversationsApi
+      .getKpiSummary()
+      .then(setKpis)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -27,7 +42,7 @@ export function HomePage() {
   const stats = [
     {
       label: "Total Conversations",
-      value: ANALYTICS_DATA.totalConversations,
+      value: loading ? "—" : kpis?.total_conversations ?? 0,
       icon: MessageSquare,
       iconBg: UI.colors.surface.glassSm,
       iconColor: UI.colors.accent,
@@ -36,7 +51,9 @@ export function HomePage() {
     },
     {
       label: "Total Cost",
-      value: `$${ANALYTICS_DATA.totalCost.toLocaleString()}`,
+      value: loading
+        ? "—"
+        : `$${kpis?.total_cost_usd.toFixed(2) ?? "0.00"}`,
       icon: DollarSign,
       iconBg: UI.colors.surface.glassSm,
       iconColor: UI.colors.success,
@@ -45,7 +62,9 @@ export function HomePage() {
     },
     {
       label: "Total Messages",
-      value: ANALYTICS_DATA.totalMessages.toLocaleString(),
+      value: loading
+        ? "—"
+        : kpis?.total_messages.toLocaleString() ?? "0",
       icon: Activity,
       iconBg: UI.colors.surface.glassSm,
       iconColor: UI.colors.accent,
@@ -54,7 +73,9 @@ export function HomePage() {
     },
     {
       label: "Avg. Cost / Conv",
-      value: `$${ANALYTICS_DATA.avgCost}`,
+      value: loading
+        ? "—"
+        : `$${kpis?.avg_cost_per_conversation.toFixed(2) ?? "0.00"}`,
       icon: Users,
       iconBg: UI.colors.surface.glassSm,
       iconColor: UI.colors.warning,
@@ -145,161 +166,6 @@ export function HomePage() {
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Cost Chart */}
-        <motion.div
-          variants={item}
-          className="rounded-2xl p-6 backdrop-blur-md"
-          style={{
-            background: UI.colors.surface.glassSm,
-            border: `1px solid ${UI.colors.border.strong}`,
-          }}
-        >
-          <h3
-            className="mb-6 text-lg font-bold"
-            style={{ color: UI.colors.text.primary }}
-          >
-            Cost Trends (Last 7 Days)
-          </h3>
-
-          <div className="flex h-64 items-end gap-2 sm:gap-4">
-            {ANALYTICS_DATA.costHistory.map((data, i) => (
-              <div
-                key={data.day}
-                className="group relative flex h-full flex-1 flex-col justify-end"
-              >
-                <div
-                  className="relative w-full overflow-hidden rounded-t-lg"
-                  style={{ background: UI.colors.surface.glassMd }}
-                >
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{
-                      height: `${(data.cost / 250) * 100}%`,
-                    }}
-                    transition={{ duration: 1, delay: i * 0.1 }}
-                    className="absolute bottom-0 w-full opacity-80"
-                    style={{
-                      backgroundImage: UI.colors.gradient.accent,
-                    }}
-                  />
-                </div>
-
-                <span
-                  className="mt-2 text-center text-xs font-medium"
-                  style={{ color: UI.colors.text.muted }}
-                >
-                  {data.day}
-                </span>
-
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <div
-                    className="rounded-lg px-2 py-1 text-xs"
-                    style={{
-                      background: UI.colors.primary,
-                      color: UI.colors.text.inverse,
-                    }}
-                  >
-                    ${data.cost}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Message Chart */}
-        <motion.div
-          variants={item}
-          className="rounded-2xl p-6 backdrop-blur-md"
-          style={{
-            background: UI.colors.surface.glassSm,
-            border: `1px solid ${UI.colors.border.strong}`,
-          }}
-        >
-          <h3
-            className="mb-6 text-lg font-bold"
-            style={{ color: UI.colors.text.primary }}
-          >
-            Message Volume
-          </h3>
-
-          <div className="flex h-64 items-end gap-2 sm:gap-4">
-            {ANALYTICS_DATA.messageVolume.map((data, i) => (
-              <div
-                key={data.day}
-                className="group relative flex h-full flex-1 flex-col justify-end"
-              >
-                <div
-                  className="relative w-full overflow-hidden rounded-t-lg"
-                  style={{ background: UI.colors.surface.glassMd }}
-                >
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{
-                      height: `${(data.messages / 600) * 100}%`,
-                    }}
-                    transition={{ duration: 1, delay: i * 0.1 }}
-                    className="absolute bottom-0 w-full opacity-80"
-                    style={{
-                      background:
-                        "linear-gradient(to top, #22c55e, #14b8a6)",
-                    }}
-                  />
-                </div>
-
-                <span
-                  className="mt-2 text-center text-xs font-medium"
-                  style={{ color: UI.colors.text.muted }}
-                >
-                  {data.day}
-                </span>
-
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <div
-                    className="rounded-lg px-2 py-1 text-xs"
-                    style={{
-                      background: UI.colors.primary,
-                      color: UI.colors.text.inverse,
-                    }}
-                  >
-                    {data.messages} msgs
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Recent Conversations */}
-      <motion.div variants={item}>
-        <div className="mb-4 flex items-center justify-between">
-          <h3
-            className="text-lg font-bold"
-            style={{ color: UI.colors.text.primary }}
-          >
-            Recent Conversations
-          </h3>
-          <button
-            className="text-sm font-medium transition-colors"
-            style={{ color: UI.colors.accent }}
-          >
-            View All
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          {/* {MOCK_CONVERSATIONS.slice(0, 4).map((conversation, index) => (
-            <ConversationListItem
-              key={conversation.id}
-              conversation={conversation}
-              index={index}
-            />
-          ))} */}
-        </div>
-      </motion.div>
     </motion.div>
   );
 }

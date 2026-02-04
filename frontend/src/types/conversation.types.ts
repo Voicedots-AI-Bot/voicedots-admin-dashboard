@@ -50,3 +50,11 @@ export interface Agent {
   agent_id: string;
   name: string;
 }
+
+export interface KpiSummary {
+  total_conversations: number;
+  total_messages: number;
+  total_credits: number;
+  total_cost_usd: number;
+  avg_cost_per_conversation: number;
+}

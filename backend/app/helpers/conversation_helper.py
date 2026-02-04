@@ -69,7 +69,10 @@ def conversations_filter(conversations_list: dict):
 def conversation_detail_filter(conversation_detail: dict):
     try:
         filtered_conversation_details = []
-        
+
+        # -------------------------
+        # Transcript
+        # -------------------------
         for msg in conversation_detail.transcript:
             filtered_conversation_details.append({
                 "role": msg.role,
@@ -78,10 +81,37 @@ def conversation_detail_filter(conversation_detail: dict):
                 "timestamp": msg.time_in_call_secs,
                 "interrupted": msg.interrupted,
             })
-            
+
+        # -------------------------
+        # Lead data 
+        # -------------------------
         lead_data = get_lead_data(conversation_detail.analysis)
-        
-        return filtered_conversation_details, lead_data
+
+        # -------------------------
+        # METADATA EXTRACTION 
+        # -------------------------
+        metadata = getattr(conversation_detail, "metadata", None)
+        charging = getattr(metadata, "charging", None) if metadata else None
+
+        charges = {
+            "llm_charge": getattr(charging, "llm_charge", 0) if charging else 0,
+            "call_charge": getattr(charging, "call_charge", 0) if charging else 0,
+            "total_credits": (
+                getattr(charging, "llm_charge", 0) +
+                getattr(charging, "call_charge", 0)
+            ) if charging else 0,
+            "call_duration_secs": getattr(metadata, "call_duration_secs", 0) if metadata else 0,
+            "status": getattr(conversation_detail, "status", None),
+        }
+
+        # -------------------------
+        # Final return
+        # -------------------------
+        return {
+            "messages": filtered_conversation_details,
+            "metadata": charges
+        }, lead_data
+
     except Exception as e:
         logger.error(f"Error in filtering conversation details: {e}")
         raise
