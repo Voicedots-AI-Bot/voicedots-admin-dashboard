@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from urllib import response
 from fastapi import APIRouter, Depends, Form, HTTPException, status, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -52,13 +54,14 @@ async def verify_user(
                     detail="Invalid Username or Password "
                 )
             user_token = create_access_token(data)
-            # response.set_cookie(key="session_id", value="abc123", httponly=True)
-
-            logger.info(f"Successfully Logged IN")
-            return {
+            response = JSONResponse(content={
                 "token":user_token,
                 "message" : "Logged In Successfully"
-            }
+            })
+            response.set_cookie(key="token", value=user_token, httponly=True)
+            
+            logger.info(f"Successfully Logged IN")
+            return response
     except HTTPException as http_exc:
         logger.error(f"HTTP Exception during authentication: {http_exc.detail}")
         raise http_exc

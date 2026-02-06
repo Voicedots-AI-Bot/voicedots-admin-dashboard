@@ -55,6 +55,7 @@ def conversations_filter(conversations_list: dict):
                 "duration": conv.call_duration_secs,
                 "message_count": conv.message_count,
                 "call_status": conv.call_successful,
+                "timestamp": int(conv.start_time_unix_secs)*1000,
             })
 
         if conversations_list.has_more:

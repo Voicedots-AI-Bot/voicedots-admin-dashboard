@@ -1,8 +1,8 @@
 {
-  "total_conversations": 656,
-  "total_messages": 10224,
-  "total_credits": 256655,
-  "total_cost_usd": 79.56269999999991,
+  "total_conversations": 675,
+  "total_messages": 10547,
+  "total_credits": 267143,
+  "total_cost_usd": 82.81399999999992,
   "processed_conversations": [
     "conv_7201kfd92bsxfzvvekzc7rwwfn9e",
     "conv_3701kgkyvf1ner29r2fm8ey4z5df",
@@ -659,6 +659,25 @@
     "conv_1101kdmh6qk3f5y8gs2jf58sar26",
     "conv_2601kdmh17rrfy9rn3w0979qzg8a",
     "conv_4801kdfj4j2de4sb3pn97q055qc9",
-    "conv_8101kgma84ayeyqt4mf5s3xt395s"
+    "conv_8101kgma84ayeyqt4mf5s3xt395s",
+    "conv_8301kgp1rb04er7a48ypyd8zdstc",
+    "conv_3801kgp1c3hhe0ybe2s22sxkjvhs",
+    "conv_1101kgms75v5fnkspmsrredjxeg6",
+    "conv_4401kgmqh2wdfvysvk9qgmybhjzx",
+    "conv_3201kgmqfwcwenybdzcxwn1892e2",
+    "conv_7301kgmqf8pwezkvzspp9k1tex33",
+    "conv_4101kgmqds7dec48hb4jx0r9kb13",
+    "conv_6001kgmqcc6zegnbnaxqyk793ze4",
+    "conv_6201kgp44x81fth8ybf0hftbmxtg",
+    "conv_9601kgpmywdve5zbfp4mn34zx8kg",
+    "conv_8801kgpmqmbhfv3a18qa3c8y4den",
+    "conv_8301kgpmmckte3btxjevpegpjrsh",
+    "conv_2701kgpmcfdae6qvn4zwtnqzv5g1",
+    "conv_6201kgpm2s7efe8v6hg8gz176zt6",
+    "conv_7801kgpm1fd7ez7918t4m56vj3fk",
+    "conv_3501kgpjfvtqet897kcys63y8e71",
+    "conv_6701kgqgtn2re2cbf2d09tjgkv2g",
+    "conv_3601kgqgrt7he63st6fj79wbzfgt",
+    "conv_6601kgq5cf4cf9ztynmgvvy6pynq"
   ]
 }
