@@ -1,8 +1,8 @@
 {
-  "total_conversations": 675,
-  "total_messages": 10547,
-  "total_credits": 267143,
-  "total_cost_usd": 82.81399999999992,
+  "total_conversations": 682,
+  "total_messages": 10730,
+  "total_credits": 273214,
+  "total_cost_usd": 84.69599999999993,
   "processed_conversations": [
     "conv_7201kfd92bsxfzvvekzc7rwwfn9e",
     "conv_3701kgkyvf1ner29r2fm8ey4z5df",
@@ -678,6 +678,13 @@
     "conv_3501kgpjfvtqet897kcys63y8e71",
     "conv_6701kgqgtn2re2cbf2d09tjgkv2g",
     "conv_3601kgqgrt7he63st6fj79wbzfgt",
-    "conv_6601kgq5cf4cf9ztynmgvvy6pynq"
+    "conv_6601kgq5cf4cf9ztynmgvvy6pynq",
+    "conv_9501kgv80ww5ewh8m1tc4xp97cz4",
+    "conv_1001kgsahchjfm7snx62mkh8x491",
+    "conv_3001kgs98697fxv9gf7p4k7a5adr",
+    "conv_6401kgvd2529ec6vnh22hss01y90",
+    "conv_1801kgvqrwn9fr48jfz7d14nb3jd",
+    "conv_4101kgvgnmzpf26r6pxwmwtr13yq",
+    "conv_2601kgvgc249ebmr58pyetzaz2s7"
   ]
 }

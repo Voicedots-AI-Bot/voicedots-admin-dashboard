@@ -3,6 +3,7 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import loginLogo from "@/assets/login.png";
+import authApi from "@/api/authApi";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -23,13 +25,20 @@ const LoginPage = () => {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      login();
-      setLoading(false);
+    try {
+      setLoading(true);
+      await authApi.login(email, password);
       navigate("/dashboard", { replace: true });
-    }, 1200);
-  };
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.detail ||
+        "Invalid email or password"
+      );
+    } finally {
+      setLoading(false);
+    }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center px-4">
@@ -53,7 +62,7 @@ const LoginPage = () => {
 
         {/* Card */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 px-6 py-8 sm:px-8">
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form  className="space-y-6" onSubmit={handleLogin}>
             {/* Error */}
             {error && (
               <div
@@ -76,6 +85,7 @@ const LoginPage = () => {
               <input
                 id="email"
                 type="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -96,6 +106,7 @@ const LoginPage = () => {
               <div className="relative mt-1">
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

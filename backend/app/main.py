@@ -5,7 +5,7 @@ import asyncio
 from app.routes import register_routers
 from app.routes.dependencies import get_elevenlabs_client
 from app.helpers.kpi_aggregator import aggregate_conversations
-from app.auth_middleware import AuthMiddleware
+from app.jwt_auth_middleware import JWTAuthMiddleware
 
 # CHANGE THIS IF YOU HAVE MULTIPLE AGENTS
 AGENT_ID = "agent_6301kdfgwyv4fc1r9vvvar5y2fbw"
@@ -28,7 +28,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(AuthMiddleware)  # Add authentication middleware
+app.add_middleware(JWTAuthMiddleware)  # Add authentication middleware
 
 # ---------------------------
 # ROUTERS
