@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 import { apiClient } from "@/api/apiClient";
 
 /* ================= TYPES ================= */

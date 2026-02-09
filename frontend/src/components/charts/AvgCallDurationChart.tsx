@@ -9,11 +9,11 @@ import {
 } from "recharts";
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
 
-export function AvgCallDurationChart({
-  data,
-}: {
+interface Props {
   data: KpiTimeseriesPoint[];
-}) {
+}
+
+export function AvgCallDurationChart({ data }: Props) {
   return (
     <div className="h-72 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <h3 className="mb-4 text-sm font-semibold text-slate-900">
@@ -26,10 +26,13 @@ export function AvgCallDurationChart({
           <XAxis
             dataKey="date"
             tick={{ fill: "#64748b", fontSize: 12 }}
+            tickFormatter={(v) =>
+              new Date(v).toLocaleDateString("en-IN", {
+                weekday: "short",
+              })
+            }
           />
-          <YAxis
-            tick={{ fill: "#64748b", fontSize: 12 }}
-          />
+          <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
           <Tooltip />
           <Line
             type="monotone"

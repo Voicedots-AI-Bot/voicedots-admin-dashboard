@@ -5,8 +5,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  CartesianGrid,
 } from "recharts";
-
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
 
 interface Props {
@@ -14,31 +14,36 @@ interface Props {
 }
 
 export function CostOverTimeChart({ data }: Props) {
-  // get date 7 days ago
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // includes today
-
-  const last7DaysData = data.filter((point) => {
-    const pointDate = new Date(point.date);
-    return pointDate >= sevenDaysAgo;
-  });
-
   return (
-    <div className="h-[300px] w-full rounded-2xl p-4 bg-white/5">
-      <h3 className="mb-4 text-sm font-semibold">
-        Cost Over Time (Last 7 Days)
+    <div className="h-[300px] w-full rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h3 className="mb-4 text-sm font-semibold text-slate-900">
+        Cost Trends
       </h3>
 
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={last7DaysData}>
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
+        <LineChart data={data}>
+          <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+          <XAxis
+            dataKey="date"
+            tick={{ fill: "#64748b", fontSize: 12 }}
+            tickFormatter={(v) =>
+              new Date(v).toLocaleDateString("en-IN", {
+                weekday: "short",
+              })
+            }
+          />
+          <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+          <Tooltip
+            formatter={(v) => [
+              `$${Number(v).toFixed(2)}`,
+              "Cost",
+            ]}
+          />
           <Line
             type="monotone"
             dataKey="cost_usd"
             stroke="#8b5cf6"
-            strokeWidth={2}
+            strokeWidth={3}
             dot={false}
           />
         </LineChart>
