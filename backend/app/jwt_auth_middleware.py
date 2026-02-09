@@ -13,7 +13,9 @@ EXEMPT_PATHS = {
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        print(request.url.path in EXEMPT_PATHS)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
         if request.url.path in EXEMPT_PATHS:
             return await call_next(request)
 

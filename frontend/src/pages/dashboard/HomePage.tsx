@@ -20,7 +20,7 @@ import {
   Bar,
 } from "recharts";
 
-import conversationsApi from "@/api/conversations";
+import { kpiAPI } from "@/api/kpi";
 import type {
   KpiSummary,
   KpiTimeseriesPoint,
@@ -46,7 +46,7 @@ export function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    conversationsApi
+    kpiAPI
       .getKpis()
       .then((res) => {
         setKpis(res.summary);

@@ -1,14 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-
+from app.config import settings
 from app.routes import register_routers
 from app.routes.dependencies import get_elevenlabs_client
 from app.helpers.kpi_aggregator import aggregate_conversations
 from app.jwt_auth_middleware import JWTAuthMiddleware
 
-# CHANGE THIS IF YOU HAVE MULTIPLE AGENTS
-AGENT_ID = "agent_6301kdfgwyv4fc1r9vvvar5y2fbw"
 
 app = FastAPI(
     title="Voicedots Admin Backend",
@@ -28,12 +26,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(JWTAuthMiddleware)  # Add authentication middleware
+app.add_middleware(JWTAuthMiddleware)  # Authentication middleware
 
 # ---------------------------
 # ROUTERS
 # ---------------------------
 register_routers(app)
+
 # ---------------------------
 # KPI BACKGROUND AGGREGATOR
 # ---------------------------
@@ -41,19 +40,19 @@ register_routers(app)
 async def start_kpi_aggregator():
     """
     Automatically aggregates KPIs in background.
-    Runs every 5 minutes.
+    Runs every 1 hour.
     """
     client = get_elevenlabs_client()
 
     async def run_loop():
         while True:
             try:
-                await aggregate_conversations(client, AGENT_ID)
+                await aggregate_conversations(client, settings.AGENT_ID)
             except Exception as e:
                 print("KPI Aggregator Error:", e)
 
-            #  Run every 5 minutes
-            await asyncio.sleep(300)
+            #  Run every 1 hour 
+            await asyncio.sleep(3600)
 
     asyncio.create_task(run_loop())
 

@@ -1,41 +1,13 @@
-import axios from "axios";
 import { apiClient } from "@/api/apiClient";
 import type {
   GetConversationsListResult,
   GetConversationsResponse,
   GetConversationDetailsResult,
   GetConversationDetailsResponse,
-  KpiSummary,
-  GetKpisResult,
 } from "@/types/conversation.types";
 
 
 const conversationsApi = {
-  /* =====================================================
-     KPI SUMMARY ONLY (USED BY OLD SCREENS – KEEP)
-  ===================================================== */
-  getKpiSummary: async (): Promise<KpiSummary> => {
-    const response = await apiClient.get<KpiSummary>(
-      "/v1/conversations/kpis/summary"
-    );
-    return response.data;
-  },
-
-  /* =====================================================
-     KPI SUMMARY + TIMESERIES (NEW – FOR GRAPHS)
-     Backend response:
-     {
-       summary: {...},
-       timeseries: [...]
-     }
-  ===================================================== */
-  getKpis: async (): Promise<GetKpisResult> => {
-    const response = await apiClient.get<GetKpisResult>(
-      "/v1/conversations/kpis"
-    );
-    return response.data;
-  },
-
   /* =====================================================
      LIST CONVERSATIONS
   ===================================================== */

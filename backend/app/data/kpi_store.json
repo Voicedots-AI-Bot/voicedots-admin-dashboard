@@ -1,9 +1,9 @@
 {
-  "total_conversations": 685,
-  "total_messages": 10796,
-  "total_credits": 276943,
-  "total_cost_usd": 85.85199999999995,
-  "total_call_duration_secs": 41363,
+  "total_conversations": 695,
+  "total_messages": 10888,
+  "total_credits": 281922,
+  "total_cost_usd": 87.39549999999996,
+  "total_call_duration_secs": 42078,
   "conversations": [
     {
       "conversation_id": "conv_7201kh0gvqntff3sn1t1czvfkwmz",
@@ -6169,6 +6169,96 @@
       "cost_usd": 0.2409,
       "call_duration_secs": 226,
       "messages_count": 17
+    },
+    {
+      "conversation_id": "conv_6601kh0rmrhbe6esf7ypvxch4rtm",
+      "timestamp": "02:05 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 561,
+      "cost_usd": 0.1739,
+      "call_duration_secs": 77,
+      "messages_count": 18
+    },
+    {
+      "conversation_id": "conv_2401kh0rhj9jegbb2yr1vfv7gj52",
+      "timestamp": "02:03 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 658,
+      "cost_usd": 0.204,
+      "call_duration_secs": 91,
+      "messages_count": 13
+    },
+    {
+      "conversation_id": "conv_1601kh0pt3wbe42s9bh7tadz1jy0",
+      "timestamp": "01:33 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 561,
+      "cost_usd": 0.1739,
+      "call_duration_secs": 81,
+      "messages_count": 8
+    },
+    {
+      "conversation_id": "conv_6101kh0nws10ffr8w7vdv62wavb8",
+      "timestamp": "01:17 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 1159,
+      "cost_usd": 0.3593,
+      "call_duration_secs": 172,
+      "messages_count": 5
+    },
+    {
+      "conversation_id": "conv_6801kh0nq2bqemdtnew7wdp7y35d",
+      "timestamp": "01:14 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 1213,
+      "cost_usd": 0.376,
+      "call_duration_secs": 175,
+      "messages_count": 20
+    },
+    {
+      "conversation_id": "conv_0401kh0shg8ff3trpxj8dd10engf",
+      "timestamp": "02:21 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 439,
+      "cost_usd": 0.1361,
+      "call_duration_secs": 61,
+      "messages_count": 23
+    },
+    {
+      "conversation_id": "conv_6801kh0sd4jzfemsmm0y3jkycexg",
+      "timestamp": "02:18 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 70,
+      "cost_usd": 0.0217,
+      "call_duration_secs": 11,
+      "messages_count": 1
+    },
+    {
+      "conversation_id": "conv_7701kh0sc7hmemjagcm6vrdc8sa1",
+      "timestamp": "02:18 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 104,
+      "cost_usd": 0.0322,
+      "call_duration_secs": 15,
+      "messages_count": 1
+    },
+    {
+      "conversation_id": "conv_6601kh0s92pyfbr991hf4jpwf8hm",
+      "timestamp": "02:16 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 127,
+      "cost_usd": 0.0394,
+      "call_duration_secs": 19,
+      "messages_count": 2
+    },
+    {
+      "conversation_id": "conv_2901kh0s6f6wf4vt4ca13kjjhjws",
+      "timestamp": "02:15 PM",
+      "date": "09 Feb 2026",
+      "cost_credits": 87,
+      "cost_usd": 0.027,
+      "call_duration_secs": 13,
+      "messages_count": 1
     }
   ]
 }

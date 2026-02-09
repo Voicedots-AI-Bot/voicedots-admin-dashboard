@@ -137,12 +137,9 @@ async def get_conversation_details(
 
         filtered_data, lead = conversation_detail_filter(data)
 
-        # ❌ DO NOT WRITE KPIs HERE
-        # Aggregator handles this
-
         return {
             "status": "success",
-            "data": filtered_data.get("messages", []),
+            "data": filtered_data,
             "lead": lead
         }
 

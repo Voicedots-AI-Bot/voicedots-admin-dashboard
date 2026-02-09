@@ -1,12 +1,25 @@
-import axios from "axios";
-import type { GetKpisResult } from "@/types/conversation.types";
+import { apiClient } from './apiClient';
+import type { GetKpisResult, KpiSummary } from "@/types/conversation.types";
 
-const BASE_URL = "http://localhost:8000";
+export const kpiAPI = {
+  getKpiSummary: async (): Promise<KpiSummary> => {
+    const response = await apiClient.get<KpiSummary>(
+      "/v1/conversations/kpis/summary"
+    );
+    return response.data;
+  },
 
-export async function getKpis(): Promise<GetKpisResult> {
-  const res = await axios.get(
-    `${BASE_URL}/v1/conversations/kpis/summary`
-  );
-
-  return res.data;
+  getKpis: async (): Promise<GetKpisResult> => {
+    const response = await apiClient.get<GetKpisResult>(
+      "/v1/conversations/kpis"
+    );
+    return response.data;
+  },
 }
+
+// export async function getKpis(): Promise<GetKpisResult>
+// const res = await apiClient.get(
+//     "/v1/conversations/kpis/summary"
+//   );
+
+//   return res.data;
