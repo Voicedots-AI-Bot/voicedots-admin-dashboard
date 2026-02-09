@@ -23,8 +23,9 @@ const authApi = {
         },
       }
     );
-
+    console.log("Login response received:", response.data);
     setAuthHeader(response.data.access_token);
+    console.log("Login successful, token set in header.");
     return response.data;
   },
 };
