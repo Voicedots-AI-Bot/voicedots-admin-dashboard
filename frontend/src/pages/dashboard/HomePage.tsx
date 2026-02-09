@@ -6,19 +6,9 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  Calendar,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  BarChart,
-  Bar,
-} from "recharts";
 
 import { kpiAPI } from "@/api/kpi";
 import type {
@@ -26,9 +16,29 @@ import type {
   KpiTimeseriesPoint,
 } from "@/types/conversation.types";
 
-/* ================= HELPERS ================= */
+import { CostOverTimeChart } from "@/components/charts/CostOverTimeChart";
+import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
+import { AvgCallDurationChart } from "@/components/charts/AvgCallDurationChart";
+
+/* ================= TYPES & HELPERS ================= */
+
+type Preset = "7d" | "15d" | "30d" | "custom";
 
 const formatUsd = (v = 0) => `$${v.toFixed(2)}`;
+
+const getRangeFromPreset = (preset: Preset) => {
+  const end = new Date();
+  const start = new Date();
+
+  if (preset === "7d") start.setDate(end.getDate() - 6);
+  if (preset === "15d") start.setDate(end.getDate() - 14);
+  if (preset === "30d") start.setDate(end.getDate() - 29);
+
+  return {
+    from: start.toISOString().slice(0, 10),
+    to: end.toISOString().slice(0, 10),
+  };
+};
 
 const container = {
   hidden: { opacity: 0 },
@@ -40,10 +50,18 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+/* ================= HOME PAGE ================= */
+
 export function HomePage() {
   const [kpis, setKpis] = useState<KpiSummary | null>(null);
   const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* ===== GLOBAL DATE RANGE ===== */
+  const [preset, setPreset] = useState<Preset>("7d");
+  const [{ from, to }, setRange] = useState(() =>
+    getRangeFromPreset("7d")
+  );
 
   useEffect(() => {
     kpiAPI
@@ -56,16 +74,33 @@ export function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* ================= LAST 7 DAYS ================= */
+  const handlePresetChange = (p: Preset) => {
+    setPreset(p);
+    if (p !== "custom") {
+      setRange(getRangeFromPreset(p));
+    }
+  };
 
-  const last7Days = useMemo(() => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 6);
-    return timeseries.filter(
-      (p) => new Date(p.date) >= cutoff
-    );
-  }, [timeseries]);
+  const handleDateChange = (f: string, t: string) => {
+    setPreset("custom");
+    setRange({ from: f, to: t });
+  };
 
+  /* ===== FILTER DATA ONCE ===== */
+const filteredData = useMemo(() => {
+  return timeseries
+    .filter((p) => {
+      const d = new Date(p.date).toISOString().slice(0, 10);
+      return d >= from && d <= to;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.date).getTime() -
+        new Date(b.date).getTime()
+    ); // 👈 IMPORTANT
+}, [timeseries, from, to]);
+
+  /* ===== KPI CARDS ===== */
   const stats = [
     {
       label: "Total Conversations",
@@ -108,7 +143,7 @@ export function HomePage() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-12"
+      className="space-y-10"
     >
       {/* ================= HEADER ================= */}
       <div>
@@ -130,7 +165,6 @@ export function HomePage() {
           >
             <div className="flex items-start justify-between">
               <stat.icon className="h-6 w-6 text-slate-700" />
-
               <div
                 className={`flex items-center gap-1 text-xs font-medium ${
                   stat.up ? "text-green-600" : "text-red-600"
@@ -157,118 +191,56 @@ export function HomePage() {
         ))}
       </div>
 
-      {/* ================= TOP GRAPHS ================= */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* COST TRENDS */}
-        <motion.div
-          variants={item}
-          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-        >
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">
-            Cost Trends (Last 7 Days)
-          </h3>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={last7Days}>
-              <CartesianGrid
-                stroke="#e5e7eb"
-                strokeDasharray="3 3"
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: "#64748b", fontSize: 12 }}
-                tickFormatter={(v) =>
-                  new Date(v).toLocaleDateString("en-IN", {
-                    weekday: "short",
-                  })
-                }
-              />
-              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip formatter={(v) => formatUsd(Number(v))} />
-              <Line
-                type="monotone"
-                dataKey="cost_usd"
-                stroke="#6366f1"
-                strokeWidth={3}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </motion.div>
-
-        {/* MESSAGE VOLUME */}
-        <motion.div
-          variants={item}
-          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-        >
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">
-            Message Volume
-          </h3>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={last7Days}>
-              <CartesianGrid
-                stroke="#e5e7eb"
-                strokeDasharray="3 3"
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: "#64748b", fontSize: 12 }}
-                tickFormatter={(v) =>
-                  new Date(v).toLocaleDateString("en-IN", {
-                    weekday: "short",
-                  })
-                }
-              />
-              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip />
-              <Bar
-                dataKey="conversations"
-                fill="#6366f1"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </motion.div>
-      </div>
-
-      {/* ================= SCROLL SECTION ================= */}
-      <div className="space-y-6">
+      {/* ================= ANALYTICS CONTROLS ================= */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-slate-900">
-          Call Analytics
+          Analytics
         </h2>
 
-        <motion.div
-          variants={item}
-          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-        >
-          <h3 className="mb-4 text-sm font-semibold text-slate-900">
-            Avg Call Duration (seconds)
-          </h3>
+        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+          {(["7d", "15d", "30d"] as Preset[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => handlePresetChange(p)}
+              className={`rounded-md px-3 py-1 text-xs font-medium ${
+                preset === p
+                  ? "bg-indigo-600 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {p === "30d" ? "1M" : p.toUpperCase()}
+            </button>
+          ))}
 
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={last7Days}>
-              <CartesianGrid
-                stroke="#e5e7eb"
-                strokeDasharray="3 3"
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: "#64748b", fontSize: 12 }}
-              />
-              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="avg_call_duration_secs"
-                stroke="#f59e0b"
-                strokeWidth={3}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </motion.div>
+          <Calendar size={14} className="text-slate-500" />
+
+          <input
+            type="date"
+            value={from}
+            onChange={(e) =>
+              handleDateChange(e.target.value, to)
+            }
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs"
+          />
+
+          <input
+            type="date"
+            value={to}
+            onChange={(e) =>
+              handleDateChange(from, e.target.value)
+            }
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs"
+          />
+        </div>
       </div>
+
+      {/* ================= CHARTS ================= */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <CostOverTimeChart data={filteredData} />
+        <ConversationsPerDayChart data={filteredData} />
+      </div>
+
+      <AvgCallDurationChart data={filteredData} />
     </motion.div>
   );
 }

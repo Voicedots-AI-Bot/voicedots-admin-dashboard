@@ -15,7 +15,7 @@ interface Props {
 
 export function ConversationsPerDayChart({ data }: Props) {
   return (
-    <div className="h-72 rounded-2xl bg-[#e6e3ff] p-6">
+    <div className="h-72 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
       <h3 className="mb-4 text-sm font-semibold text-slate-900">
         Message Volume
       </h3>
@@ -25,12 +25,10 @@ export function ConversationsPerDayChart({ data }: Props) {
           data={data}
           margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
         >
-          {/* very soft grid */}
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="#c7c4ff"
-            opacity={0.4}
+            stroke="#e5e7eb"
           />
 
           <XAxis
@@ -70,7 +68,7 @@ export function ConversationsPerDayChart({ data }: Props) {
           <Bar
             dataKey="conversations"
             radius={[6, 6, 0, 0]}
-            fill="#7c7cff"
+            fill="#6366f1" // same indigo family as other charts
           />
         </BarChart>
       </ResponsiveContainer>

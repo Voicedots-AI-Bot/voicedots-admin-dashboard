@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Phone, MessageSquare, Search, Loader2 } from "lucide-react";
+import {
+  Phone,
+  MessageSquare,
+  Search,
+  Loader2,
+} from "lucide-react";
 import leadsApi from "@/api/leads";
 import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
 import { LeadsKpi } from "@/components/leadsKpi";
@@ -12,8 +17,12 @@ export function LeadsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedLead, setSelectedLead] =
+    useState<Lead | null>(null);
+  const [drawerOpen, setDrawerOpen] =
+    useState(false);
+
+  /* ================= FETCH LEADS ================= */
 
   useEffect(() => {
     async function fetchLeads() {
@@ -22,8 +31,11 @@ export function LeadsPage() {
       setLeads(data);
       setLoading(false);
     }
+
     fetchLeads();
   }, []);
+
+  /* ================= DERIVED DATA ================= */
 
   const filteredLeads = leads.filter(
     (l) =>
@@ -31,14 +43,13 @@ export function LeadsPage() {
       l.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const qualifiedCount = leads.filter(
+  const totalLeads = leads.length;
+
+  const qualifiedLeads = leads.filter(
     (l) => l.status === "Qualified"
   ).length;
 
-  const conversionRate =
-    leads.length === 0
-      ? 0
-      : Math.round((qualifiedCount / leads.length) * 100);
+  /* ================= RENDER ================= */
 
   return (
     <>
@@ -46,13 +57,17 @@ export function LeadsPage() {
       <div
         className="flex flex-col h-full overflow-hidden gap-6 transition-all duration-300"
         style={{
-          marginRight: drawerOpen ? `${DRAWER_WIDTH}px` : "0px",
+          marginRight: drawerOpen
+            ? `${DRAWER_WIDTH}px`
+            : "0px",
         }}
       >
         {/* ================= HEADER ================= */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Leads</h1>
+            <h1 className="text-3xl font-bold">
+              Leads
+            </h1>
             <p className="text-gray-500">
               Captured automatically by your AI avatar
             </p>
@@ -67,7 +82,9 @@ export function LeadsPage() {
             <input
               placeholder="Search leads"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
               className="
                 w-full h-11
                 pl-10 pr-3
@@ -83,6 +100,7 @@ export function LeadsPage() {
         </div>
 
         {/* ================= KPI SECTION ================= */}
+<<<<<<< Updated upstream
         {/* <LeadsKpi
           totalConversations={leads.length}
           totalCostUsd,
@@ -91,6 +109,14 @@ export function LeadsPage() {
           // qualified={qualifiedCount}
           // conversion={conversionRate}
         /> */}
+=======
+        {!loading && (
+          <LeadsKpi
+            totalLeads={totalLeads}
+            qualifiedLeads={qualifiedLeads}
+          />
+        )}
+>>>>>>> Stashed changes
 
         {/* ================= LEADS LIST ================= */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
@@ -138,7 +164,7 @@ export function LeadsPage() {
                   </div>
                 </div>
 
-                {/* PHONE — DESKTOP ONLY */}
+                {/* PHONE — DESKTOP */}
                 <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 w-[180px]">
                   <Phone size={14} />
                   {lead.phone}

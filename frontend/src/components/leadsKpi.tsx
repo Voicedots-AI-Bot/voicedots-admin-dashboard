@@ -1,17 +1,13 @@
 import {
-  PhoneCall,
-  DollarSign,
-  Clock,
-  BarChart2,
+  Users,
+  CheckCircle,
 } from "lucide-react";
 
 /* ================= TYPES ================= */
 
 type KpiProps = {
-  totalConversations: number;
-  totalCostUsd: number;
-  avgCostUsd: number;
-  avgCallDurationSecs: number;
+  totalLeads: number;
+  qualifiedLeads: number;
 };
 
 /* ================= SHARED KPI CARD ================= */
@@ -24,7 +20,7 @@ function KpiCard({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string | number;
+  value: number;
   vertical?: boolean;
 }) {
   return (
@@ -55,6 +51,7 @@ function KpiCard({
   );
 }
 
+<<<<<<< Updated upstream
 /* ================= HELPERS ================= */
 
 const formatUsd = (value: number) =>
@@ -66,35 +63,25 @@ const formatDuration = (secs: number) => {
   return `${min}m ${sec}s`;
 };
 
+=======
+>>>>>>> Stashed changes
 /* ================= DESKTOP KPI ROW ================= */
 
 function DesktopKpis({
-  totalConversations,
-  totalCostUsd,
-  avgCostUsd,
-  avgCallDurationSecs,
+  totalLeads,
+  qualifiedLeads,
 }: KpiProps) {
   return (
-    <div className="hidden md:grid grid-cols-4 gap-6">
+    <div className="hidden md:grid grid-cols-2 gap-6">
       <KpiCard
-        icon={<PhoneCall size={18} />}
-        label="Total Conversations"
-        value={totalConversations}
+        icon={<Users size={18} />}
+        label="Total Leads"
+        value={totalLeads}
       />
       <KpiCard
-        icon={<DollarSign size={18} />}
-        label="Total Cost"
-        value={formatUsd(totalCostUsd)}
-      />
-      <KpiCard
-        icon={<BarChart2 size={18} />}
-        label="Avg Cost / Call"
-        value={formatUsd(avgCostUsd)}
-      />
-      <KpiCard
-        icon={<Clock size={18} />}
-        label="Avg Call Duration"
-        value={formatDuration(avgCallDurationSecs)}
+        icon={<CheckCircle size={18} />}
+        label="Qualified Leads"
+        value={qualifiedLeads}
       />
     </div>
   );
@@ -103,35 +90,21 @@ function DesktopKpis({
 /* ================= MOBILE KPI ROW ================= */
 
 function MobileKpis({
-  totalConversations,
-  totalCostUsd,
-  avgCostUsd,
-  avgCallDurationSecs,
+  totalLeads,
+  qualifiedLeads,
 }: KpiProps) {
   return (
     <div className="md:hidden grid grid-cols-2 gap-3">
       <KpiCard
-        icon={<PhoneCall size={16} />}
-        label="Calls"
-        value={totalConversations}
+        icon={<Users size={16} />}
+        label="Leads"
+        value={totalLeads}
         vertical
       />
       <KpiCard
-        icon={<DollarSign size={16} />}
-        label="Total Cost"
-        value={formatUsd(totalCostUsd)}
-        vertical
-      />
-      <KpiCard
-        icon={<BarChart2 size={16} />}
-        label="Avg Cost"
-        value={formatUsd(avgCostUsd)}
-        vertical
-      />
-      <KpiCard
-        icon={<Clock size={16} />}
-        label="Avg Duration"
-        value={formatDuration(avgCallDurationSecs)}
+        icon={<CheckCircle size={16} />}
+        label="Qualified"
+        value={qualifiedLeads}
         vertical
       />
     </div>
@@ -141,24 +114,18 @@ function MobileKpis({
 /* ================= MAIN EXPORT ================= */
 
 export function LeadsKpi({
-  totalConversations,
-  totalCostUsd,
-  avgCostUsd,
-  avgCallDurationSecs,
+  totalLeads,
+  qualifiedLeads,
 }: KpiProps) {
   return (
     <>
       <DesktopKpis
-        totalConversations={totalConversations}
-        totalCostUsd={totalCostUsd}
-        avgCostUsd={avgCostUsd}
-        avgCallDurationSecs={avgCallDurationSecs}
+        totalLeads={totalLeads}
+        qualifiedLeads={qualifiedLeads}
       />
       <MobileKpis
-        totalConversations={totalConversations}
-        totalCostUsd={totalCostUsd}
-        avgCostUsd={avgCostUsd}
-        avgCallDurationSecs={avgCallDurationSecs}
+        totalLeads={totalLeads}
+        qualifiedLeads={qualifiedLeads}
       />
     </>
   );

@@ -37,8 +37,13 @@ const AppRoutes = () => {
           {/* LEADS */}
           <Route path="leads" element={<LeadsPage />} />
 
+<<<<<<< Updated upstream
           <Route path="leads" element={<LeadsPage />} />
           <Route path="conversations/:id" element={<ConversationDetails />} />
+=======
+        <Route path="leads" element={<LeadsPage />} />
+        <Route path="conversations/:id" element={<ConversationDetails />} />
+>>>>>>> Stashed changes
 
 
           {/* SETTINGS */}
