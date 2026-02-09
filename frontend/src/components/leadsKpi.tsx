@@ -58,7 +58,7 @@ function KpiCard({
 /* ================= HELPERS ================= */
 
 const formatUsd = (value: number) =>
-  `$${value.toFixed(2)}`;
+  `$${value?.toFixed(2)}`;
 
 const formatDuration = (secs: number) => {
   const min = Math.floor(secs / 60);

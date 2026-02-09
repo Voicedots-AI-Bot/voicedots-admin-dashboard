@@ -1,4 +1,3 @@
-import axios from "axios";
 import { apiClient } from "@/api/apiClient";
 
 /* ================= TYPES ================= */
@@ -23,11 +22,6 @@ interface GetLeadDetailsResponse {
   status: string;
   data: Lead;
 }
-
-/* ================= AXIOS CLIENT ================= */
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 
 

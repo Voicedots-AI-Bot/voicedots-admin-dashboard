@@ -7,7 +7,7 @@ import { HomePage } from "@/pages/dashboard/HomePage";
 import { ConversationsPage } from "@/pages/dashboard/ConversationsPage";
 import { ConversationDetails } from "@/pages/dashboard/ConversationDetails";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
-
+import ProtectedRoute from "@/routes/ProtectedRoute";
 import { LeadsPage } from "@/pages/dashboard/LeadsPage";
 
 const AppRoutes = () => {
@@ -21,36 +21,39 @@ const AppRoutes = () => {
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
-      {/* DASHBOARD */}
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<HomePage />} />
+      {/* PROTECTED ROUTES */}
+      <Route element={<ProtectedRoute />}>
+        {/* DASHBOARD */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<HomePage />} />
 
-        {/* CONVERSATIONS */}
-        <Route path="conversations" element={<ConversationsPage />} />
-        <Route
-          path="conversations/:id"
-          element={<ConversationDetails />}
-        />
+          {/* CONVERSATIONS */}
+          <Route path="conversations" element={<ConversationsPage />} />
+          <Route
+            path="conversations/:id"
+            element={<ConversationDetails />}
+          />
 
-        {/* LEADS */}
-        <Route path="leads" element={<LeadsPage />} />
+          {/* LEADS */}
+          <Route path="leads" element={<LeadsPage />} />
 
-        <Route path="leads" element={<LeadsPage />} />
-<Route path="conversations/:id" element={<ConversationDetails />} />
+          <Route path="leads" element={<LeadsPage />} />
+          <Route path="conversations/:id" element={<ConversationDetails />} />
 
 
-        {/* SETTINGS */}
-        <Route path="settings" element={<SettingsPage />} />
+          {/* SETTINGS */}
+          <Route path="settings" element={<SettingsPage />} />
 
-        {/* DASHBOARD FALLBACK */}
-        <Route
-          path="*"
-          element={<Navigate to="/dashboard" replace />}
-        />
+          {/* DASHBOARD FALLBACK */}
+          <Route
+            path="*"
+            element={<Navigate to="/dashboard" replace />}
+          />
+        </Route>
+
+        {/* GLOBAL 404 */}
+        <Route path="*" element={<div>Page not found</div>} />
       </Route>
-
-      {/* GLOBAL 404 */}
-      <Route path="*" element={<div>Page not found</div>} />
     </Routes>
   );
 };

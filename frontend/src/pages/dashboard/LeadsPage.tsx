@@ -83,11 +83,14 @@ export function LeadsPage() {
         </div>
 
         {/* ================= KPI SECTION ================= */}
-        <LeadsKpi
-          total={leads.length}
-          qualified={qualifiedCount}
-          conversion={conversionRate}
-        />
+        {/* <LeadsKpi
+          totalConversations={leads.length}
+          totalCostUsd,
+          avgCostUsd,
+          avgCallDurationSecs
+          // qualified={qualifiedCount}
+          // conversion={conversionRate}
+        /> */}
 
         {/* ================= LEADS LIST ================= */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
