@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, Menu, ChevronDown, PanelLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import authApi from "@/api/authApi";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -198,8 +199,9 @@ export function TopBar({
                   <button
                     onClick={() => {
                       setProfileOpen(false);
-                      logout();
-                      navigate("/login", { replace: true });
+                      authApi.logout().then(() => {
+                        navigate("/login", { replace: true });
+                      });
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-slate-800"
                   >

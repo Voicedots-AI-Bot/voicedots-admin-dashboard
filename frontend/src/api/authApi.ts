@@ -27,7 +27,11 @@ const authApi = {
     setAuthHeader(response.data.access_token);
     console.log("Login successful, token set in header.");
     return response.data;
-  },
+  }, 
+  logout: async () => {
+    console.log("Logging out user...");
+    setAuthHeader(null);
+  }
 };
 
 export default authApi;

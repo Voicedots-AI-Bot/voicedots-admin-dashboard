@@ -1,6 +1,6 @@
 import { Home, MessageSquare, Settings, LogOut, Users } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import authApi from "@/api/authApi";
 import SidebarLogo from "./SideBarLogo";
 
 interface SidebarProps {
@@ -16,7 +16,7 @@ export function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  // const { logout } = useAuth();
 
   const navItems = [
     { id: "home", icon: Home, label: "Home", path: "/dashboard" },
@@ -103,8 +103,9 @@ export function Sidebar({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                logout();
-                navigate("/login", { replace: true });
+                authApi.logout().then(() => {
+                  navigate("/login", { replace: true });
+                });
               }}
               className={`w-full flex items-center gap-x-3.5 py-3 px-4 text-sm text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors
                 ${isCollapsed ? "md:justify-center md:px-0" : ""}`}

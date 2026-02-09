@@ -17,6 +17,7 @@ export const setAuthHeader = (token: string | null) => {
   } else {
     localStorage.removeItem("access_token");
     delete apiClient.defaults.headers.common.Authorization;
+    console.log("Auth header removed, user logged out.");
   }
 };
 
