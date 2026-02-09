@@ -51,20 +51,6 @@ function KpiCard({
   );
 }
 
-<<<<<<< Updated upstream
-/* ================= HELPERS ================= */
-
-const formatUsd = (value: number) =>
-  `$${value?.toFixed(2)}`;
-
-const formatDuration = (secs: number) => {
-  const min = Math.floor(secs / 60);
-  const sec = secs % 60;
-  return `${min}m ${sec}s`;
-};
-
-=======
->>>>>>> Stashed changes
 /* ================= DESKTOP KPI ROW ================= */
 
 function DesktopKpis({

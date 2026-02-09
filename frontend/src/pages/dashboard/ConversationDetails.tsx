@@ -16,8 +16,9 @@ import {
 import conversationsApi from "@/api/conversations";
 import { UI } from "@/ui/colors";
 import type { GetConversationDetailsResult } from "@/types/conversation.types";
-import logoIcon from "@/assets/logo.png";
 import { ConversationAudioPlayer } from "@/components/ConversationAudioPlayer";
+
+const logoIcon = "/voicedotslogo.svg";
 
 const formatTime = (timestamp?: number) => {
   if (!timestamp) return "";

@@ -100,23 +100,12 @@ export function LeadsPage() {
         </div>
 
         {/* ================= KPI SECTION ================= */}
-<<<<<<< Updated upstream
-        {/* <LeadsKpi
-          totalConversations={leads.length}
-          totalCostUsd,
-          avgCostUsd,
-          avgCallDurationSecs
-          // qualified={qualifiedCount}
-          // conversion={conversionRate}
-        /> */}
-=======
         {!loading && (
           <LeadsKpi
             totalLeads={totalLeads}
             qualifiedLeads={qualifiedLeads}
           />
         )}
->>>>>>> Stashed changes
 
         {/* ================= LEADS LIST ================= */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
