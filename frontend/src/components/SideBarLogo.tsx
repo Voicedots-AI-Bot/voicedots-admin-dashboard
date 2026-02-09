@@ -1,9 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react'; 
 
-import logoIcon from "@/assets/logo.png";
-import logoText from "@/assets/voicedots.png";
-
 interface SidebarLogoProps {
   isCollapsed: boolean;
   onClose: () => void;
@@ -21,20 +18,30 @@ const SidebarLogo: React.FC<SidebarLogoProps> = ({
       {/* Logo Container */}
       <div className="flex items-center">
         {/* Icon logo */}
-        <img
-          src={logoIcon}
-          alt="Voicedots Icon"
-          className="w-12 h-12 object-contain"
-        />
+        <h1
+          className="
+            text-2xl md:text-4xl font-bold tracking-tighter mb-6
+            bg-clip-text
+            bg-gradient-to-b
+            from-foreground to-foreground/60
+          "
+          >
+            <img
+              src="/voicedotslogo.svg"
+              alt="V"
+              className="h-[1.1em] w-auto inline-block align-middle -translate-y-[0.1em] mr-[-0.3em]"
+            />
+            {!isCollapsed ? "oiceDots" : null}
+          </h1>
 
-        {/* Text logo */}
+        {/* Text logo
         {!isCollapsed && (
           <img
             src={logoText}
             alt="Voicedots"
             className="h-8 md:h-10 object-contain mt-1.5"
           />
-        )}
+        )} */}
       </div>
 
       {/* Mobile close button */}

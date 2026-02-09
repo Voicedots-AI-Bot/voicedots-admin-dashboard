@@ -1,13 +1,10 @@
 import { useState } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import loginLogo from "@/assets/login.png";
 import authApi from "@/api/authApi";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,12 +42,21 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-6">
-          <img
-            src={loginLogo}
-            alt="Voicedots"
-            className="mx-auto h-12 sm:h-14 object-contain mb-3"
-          />
-
+          <h3
+          className="
+            text-xl md:text-2xl font-bold tracking-tighter mb-6
+            bg-clip-text
+            bg-gradient-to-b
+            from-foreground to-foreground/60
+          "
+          >
+            <img
+              src="/voicedotslogo.svg"
+              alt="V"
+              className="h-[1.1em] w-auto inline-block align-middle -translate-y-[0.1em] mr-[-0.3em]"
+            />oiceDots
+          </h3>
+          
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
             Admin Portal
           </h1>
