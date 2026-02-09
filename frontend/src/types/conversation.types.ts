@@ -1,4 +1,7 @@
-// CONVERSATIONS LIST TYPES
+/* =============================
+   CONVERSATIONS LIST TYPES
+============================= */
+
 export interface ConversationsListSummary {
   conversation_id: string;
   title: string;
@@ -12,13 +15,16 @@ export interface GetConversationsResponse {
   data: ConversationsListSummary[];
   next_page: string | null;
 }
+
 export interface GetConversationsListResult {
   conversations: ConversationsListSummary[];
   nextPage: string | null;
 }
 
+/* =============================
+   CONVERSATION DETAILS
+============================= */
 
-// CONVERSATION DETAILS AND TRANSCRIPT TYPES
 export interface ConversationDetailsSummary {
   role: "agent" | "user";
   message: string | null;
@@ -27,12 +33,13 @@ export interface ConversationDetailsSummary {
   interrupted: boolean;
 }
 
-interface LeadDetails {
+export interface LeadDetails {
   name: string;
   email: string;
   phone_number: string;
   business_desc: string;
 }
+
 export interface GetConversationDetailsResponse {
   status: string;
   data: ConversationDetailsSummary[];
@@ -44,17 +51,38 @@ export interface GetConversationDetailsResult {
   lead: LeadDetails | null;
 }
 
-// AGENT TYPES
-
-export interface Agent {
-  agent_id: string;
-  name: string;
-}
+/* =============================
+   KPI SUMMARY (CARDS)
+============================= */
 
 export interface KpiSummary {
   total_conversations: number;
   total_messages: number;
-  total_credits: number;
+
   total_cost_usd: number;
-  avg_cost_per_conversation: number;
+  avg_cost_per_conversation_usd: number;
+
+  total_call_duration_secs: number;
+  avg_call_duration_secs: number;
+}
+
+/* =============================
+   KPI TIMESERIES (GRAPHS)
+============================= */
+
+export interface KpiTimeseriesPoint {
+  date: string; // YYYY-MM-DD
+  conversations: number;
+  messages: number;
+  cost_usd: number;
+  avg_call_duration_secs: number;
+}
+
+/* =============================
+   KPI API RESPONSE
+============================= */
+
+export interface GetKpisResult {
+  summary: KpiSummary;
+  timeseries: KpiTimeseriesPoint[];
 }

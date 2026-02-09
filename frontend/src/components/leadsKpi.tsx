@@ -1,11 +1,17 @@
-import { Users, CheckCircle, Percent } from "lucide-react";
+import {
+  PhoneCall,
+  DollarSign,
+  Clock,
+  BarChart2,
+} from "lucide-react";
 
 /* ================= TYPES ================= */
 
-type LeadsKpiProps = {
-  total: number;
-  qualified: number;
-  conversion: number;
+type KpiProps = {
+  totalConversations: number;
+  totalCostUsd: number;
+  avgCostUsd: number;
+  avgCallDurationSecs: number;
 };
 
 /* ================= SHARED KPI CARD ================= */
@@ -25,8 +31,7 @@ function KpiCard({
     <div
       className={`
         bg-white border rounded-2xl
-        p-4
-        flex
+        p-4 flex
         ${
           vertical
             ? "flex-col items-center text-center gap-2"
@@ -50,29 +55,46 @@ function KpiCard({
   );
 }
 
+/* ================= HELPERS ================= */
+
+const formatUsd = (value: number) =>
+  `$${value.toFixed(2)}`;
+
+const formatDuration = (secs: number) => {
+  const min = Math.floor(secs / 60);
+  const sec = secs % 60;
+  return `${min}m ${sec}s`;
+};
+
 /* ================= DESKTOP KPI ROW ================= */
 
-function DesktopLeadsKpi({
-  total,
-  qualified,
-  conversion,
-}: LeadsKpiProps) {
+function DesktopKpis({
+  totalConversations,
+  totalCostUsd,
+  avgCostUsd,
+  avgCallDurationSecs,
+}: KpiProps) {
   return (
-    <div className="hidden md:grid grid-cols-3 gap-6">
+    <div className="hidden md:grid grid-cols-4 gap-6">
       <KpiCard
-        icon={<Users size={18} />}
-        label="Total Leads"
-        value={total}
+        icon={<PhoneCall size={18} />}
+        label="Total Conversations"
+        value={totalConversations}
       />
       <KpiCard
-        icon={<CheckCircle size={18} />}
-        label="Qualified Leads"
-        value={qualified}
+        icon={<DollarSign size={18} />}
+        label="Total Cost"
+        value={formatUsd(totalCostUsd)}
       />
       <KpiCard
-        icon={<Percent size={18} />}
-        label="Conversion Rate"
-        value={`${conversion}%`}
+        icon={<BarChart2 size={18} />}
+        label="Avg Cost / Call"
+        value={formatUsd(avgCostUsd)}
+      />
+      <KpiCard
+        icon={<Clock size={18} />}
+        label="Avg Call Duration"
+        value={formatDuration(avgCallDurationSecs)}
       />
     </div>
   );
@@ -80,29 +102,36 @@ function DesktopLeadsKpi({
 
 /* ================= MOBILE KPI ROW ================= */
 
-function MobileLeadsKpi({
-  total,
-  qualified,
-  conversion,
-}: LeadsKpiProps) {
+function MobileKpis({
+  totalConversations,
+  totalCostUsd,
+  avgCostUsd,
+  avgCallDurationSecs,
+}: KpiProps) {
   return (
-    <div className="md:hidden grid grid-cols-3 gap-3">
+    <div className="md:hidden grid grid-cols-2 gap-3">
       <KpiCard
-        icon={<Users size={16} />}
-        label="Total"
-        value={total}
+        icon={<PhoneCall size={16} />}
+        label="Calls"
+        value={totalConversations}
         vertical
       />
       <KpiCard
-        icon={<CheckCircle size={16} />}
-        label="Qualified"
-        value={qualified}
+        icon={<DollarSign size={16} />}
+        label="Total Cost"
+        value={formatUsd(totalCostUsd)}
         vertical
       />
       <KpiCard
-        icon={<Percent size={16} />}
-        label="Conversion"
-        value={`${conversion}%`}
+        icon={<BarChart2 size={16} />}
+        label="Avg Cost"
+        value={formatUsd(avgCostUsd)}
+        vertical
+      />
+      <KpiCard
+        icon={<Clock size={16} />}
+        label="Avg Duration"
+        value={formatDuration(avgCallDurationSecs)}
         vertical
       />
     </div>
@@ -112,21 +141,24 @@ function MobileLeadsKpi({
 /* ================= MAIN EXPORT ================= */
 
 export function LeadsKpi({
-  total,
-  qualified,
-  conversion,
-}: LeadsKpiProps) {
+  totalConversations,
+  totalCostUsd,
+  avgCostUsd,
+  avgCallDurationSecs,
+}: KpiProps) {
   return (
     <>
-      <DesktopLeadsKpi
-        total={total}
-        qualified={qualified}
-        conversion={conversion}
+      <DesktopKpis
+        totalConversations={totalConversations}
+        totalCostUsd={totalCostUsd}
+        avgCostUsd={avgCostUsd}
+        avgCallDurationSecs={avgCallDurationSecs}
       />
-      <MobileLeadsKpi
-        total={total}
-        qualified={qualified}
-        conversion={conversion}
+      <MobileKpis
+        totalConversations={totalConversations}
+        totalCostUsd={totalCostUsd}
+        avgCostUsd={avgCostUsd}
+        avgCallDurationSecs={avgCallDurationSecs}
       />
     </>
   );

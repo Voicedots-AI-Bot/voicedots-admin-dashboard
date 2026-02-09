@@ -7,7 +7,8 @@ logger = get_logger("Conversation Filter")
 def get_avatar(tool_calls_list: list):
     try:
         if tool_calls_list:
-            logger.info("Reading Avatar from list")
+            logger.debug("Reading Avatar from list")
+
             for tool in tool_calls_list:
                 if tool.tool_name == "glowAvatar":
                     params_json = tool.params_as_json
@@ -102,6 +103,7 @@ def conversation_detail_filter(conversation_detail: dict):
                 getattr(charging, "call_charge", 0)
             ) if charging else 0,
             "call_duration_secs": getattr(metadata, "call_duration_secs", 0) if metadata else 0,
+            "start_time_unix_secs": getattr(metadata, "start_time_unix_secs", 0) if metadata else 0,
             "status": getattr(conversation_detail, "status", None),
         }
 

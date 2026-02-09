@@ -7,58 +7,81 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  BarChart,
+  Bar,
+} from "recharts";
 
 import conversationsApi from "@/api/conversations";
-import type { KpiSummary } from "@/types/conversation.types";
-// import { ANALYTICS_DATA } from "@/utils/mockData";
-import { UI } from "@/ui/colors";
+import type {
+  KpiSummary,
+  KpiTimeseriesPoint,
+} from "@/types/conversation.types";
+
+/* ================= HELPERS ================= */
+
+const formatUsd = (v = 0) => `$${v.toFixed(2)}`;
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0 },
+};
 
 export function HomePage() {
   const [kpis, setKpis] = useState<KpiSummary | null>(null);
+  const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     conversationsApi
-      .getKpiSummary()
-      .then(setKpis)
+      .getKpis()
+      .then((res) => {
+        setKpis(res.summary);
+        setTimeseries(res.timeseries);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
+  /* ================= LAST 7 DAYS ================= */
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
-  };
+  const last7Days = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 6);
+    return timeseries.filter(
+      (p) => new Date(p.date) >= cutoff
+    );
+  }, [timeseries]);
 
   const stats = [
     {
       label: "Total Conversations",
       value: loading ? "—" : kpis?.total_conversations ?? 0,
       icon: MessageSquare,
-      iconBg: UI.colors.surface.glassSm,
-      iconColor: UI.colors.accent,
       trend: "+12%",
-      trendUp: true,
+      up: true,
     },
     {
       label: "Total Cost",
       value: loading
         ? "—"
-        : `$${kpis?.total_cost_usd.toFixed(2) ?? "0.00"}`,
+        : formatUsd(kpis?.total_cost_usd ?? 0),
       icon: DollarSign,
-      iconBg: UI.colors.surface.glassSm,
-      iconColor: UI.colors.success,
       trend: "+8.5%",
-      trendUp: true,
+      up: true,
     },
     {
       label: "Total Messages",
@@ -66,21 +89,17 @@ export function HomePage() {
         ? "—"
         : kpis?.total_messages.toLocaleString() ?? "0",
       icon: Activity,
-      iconBg: UI.colors.surface.glassSm,
-      iconColor: UI.colors.accent,
       trend: "+24%",
-      trendUp: true,
+      up: true,
     },
     {
-      label: "Avg. Cost / Conv",
+      label: "Avg Cost / Conv",
       value: loading
         ? "—"
-        : `$${kpis?.avg_cost_per_conversation.toFixed(2) ?? "0.00"}`,
+        : formatUsd(kpis?.avg_cost_per_conversation_usd ?? 0),
       icon: Users,
-      iconBg: UI.colors.surface.glassSm,
-      iconColor: UI.colors.warning,
       trend: "-2.1%",
-      trendUp: false,
+      up: false,
     },
   ];
 
@@ -89,58 +108,36 @@ export function HomePage() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-8"
+      className="space-y-12"
     >
-      {/* Header */}
+      {/* ================= HEADER ================= */}
       <div>
-        <h1
-          className="text-3xl font-bold"
-          style={{ color: UI.colors.text.primary }}
-        >
+        <h1 className="text-3xl font-bold text-slate-900">
           Dashboard Overview
         </h1>
-        <p
-          className="mt-1"
-          style={{ color: UI.colors.text.secondary }}
-        >
-          Welcome back! Here's your activity summary.
+        <p className="text-slate-500">
+          Welcome back! Here’s your activity summary.
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* ================= KPI CARDS ================= */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <motion.div
             key={stat.label}
             variants={item}
-            className="group relative overflow-hidden rounded-2xl p-6 backdrop-blur-md transition-all"
-            style={{
-              background: UI.colors.surface.glassSm,
-              border: `1px solid ${UI.colors.border.strong}`,
-              boxShadow: UI.colors.shadow.sm,
-            }}
+            className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
           >
             <div className="flex items-start justify-between">
-              <div
-                className="rounded-xl p-3"
-                style={{ background: stat.iconBg }}
-              >
-                <stat.icon
-                  className="h-6 w-6"
-                  style={{ color: stat.iconColor }}
-                />
-              </div>
+              <stat.icon className="h-6 w-6 text-slate-700" />
 
               <div
-                className="flex items-center gap-1 text-xs font-medium"
-                style={{
-                  color: stat.trendUp
-                    ? UI.colors.success
-                    : UI.colors.danger,
-                }}
+                className={`flex items-center gap-1 text-xs font-medium ${
+                  stat.up ? "text-green-600" : "text-red-600"
+                }`}
               >
                 {stat.trend}
-                {stat.trendUp ? (
+                {stat.up ? (
                   <ArrowUpRight size={14} />
                 ) : (
                   <ArrowDownRight size={14} />
@@ -149,16 +146,10 @@ export function HomePage() {
             </div>
 
             <div className="mt-4">
-              <p
-                className="text-sm font-medium"
-                style={{ color: UI.colors.text.muted }}
-              >
+              <p className="text-sm text-slate-500">
                 {stat.label}
               </p>
-              <p
-                className="mt-1 text-2xl font-bold"
-                style={{ color: UI.colors.text.primary }}
-              >
+              <p className="mt-1 text-2xl font-bold text-slate-900">
                 {stat.value}
               </p>
             </div>
@@ -166,6 +157,118 @@ export function HomePage() {
         ))}
       </div>
 
+      {/* ================= TOP GRAPHS ================= */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* COST TRENDS */}
+        <motion.div
+          variants={item}
+          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+        >
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">
+            Cost Trends (Last 7 Days)
+          </h3>
+
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={last7Days}>
+              <CartesianGrid
+                stroke="#e5e7eb"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "#64748b", fontSize: 12 }}
+                tickFormatter={(v) =>
+                  new Date(v).toLocaleDateString("en-IN", {
+                    weekday: "short",
+                  })
+                }
+              />
+              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip formatter={(v) => formatUsd(Number(v))} />
+              <Line
+                type="monotone"
+                dataKey="cost_usd"
+                stroke="#6366f1"
+                strokeWidth={3}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* MESSAGE VOLUME */}
+        <motion.div
+          variants={item}
+          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+        >
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">
+            Message Volume
+          </h3>
+
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={last7Days}>
+              <CartesianGrid
+                stroke="#e5e7eb"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "#64748b", fontSize: 12 }}
+                tickFormatter={(v) =>
+                  new Date(v).toLocaleDateString("en-IN", {
+                    weekday: "short",
+                  })
+                }
+              />
+              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip />
+              <Bar
+                dataKey="conversations"
+                fill="#6366f1"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
+
+      {/* ================= SCROLL SECTION ================= */}
+      <div className="space-y-6">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Call Analytics
+        </h2>
+
+        <motion.div
+          variants={item}
+          className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+        >
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">
+            Avg Call Duration (seconds)
+          </h3>
+
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={last7Days}>
+              <CartesianGrid
+                stroke="#e5e7eb"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "#64748b", fontSize: 12 }}
+              />
+              <YAxis tick={{ fill: "#64748b", fontSize: 12 }} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="avg_call_duration_secs"
+                stroke="#f59e0b"
+                strokeWidth={3}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

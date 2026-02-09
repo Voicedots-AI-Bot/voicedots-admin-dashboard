@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 import type {
   GetConversationsListResult,
@@ -6,107 +6,102 @@ import type {
   GetConversationDetailsResult,
   GetConversationDetailsResponse,
   KpiSummary,
-} from '@/types/conversation.types';
+  GetKpisResult,
+} from "@/types/conversation.types";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 const conversationsApi = {
-  // ----------------------------------
-  // KPI SUMMARY
-  // ----------------------------------
+  /* =====================================================
+     KPI SUMMARY ONLY (USED BY OLD SCREENS – KEEP)
+  ===================================================== */
   getKpiSummary: async (): Promise<KpiSummary> => {
     const response = await apiClient.get<KpiSummary>(
-      '/v1/conversations/kpis/summary'
+      "/v1/conversations/kpis/summary"
     );
     return response.data;
   },
 
-  // ----------------------------------
-  // LIST CONVERSATIONS
-  // ----------------------------------
+  /* =====================================================
+     KPI SUMMARY + TIMESERIES (NEW – FOR GRAPHS)
+     Backend response:
+     {
+       summary: {...},
+       timeseries: [...]
+     }
+  ===================================================== */
+  getKpis: async (): Promise<GetKpisResult> => {
+    const response = await apiClient.get<GetKpisResult>(
+      "/v1/conversations/kpis"
+    );
+    return response.data;
+  },
+
+  /* =====================================================
+     LIST CONVERSATIONS
+  ===================================================== */
   getConversations: async (
     agentId?: string | null,
     cursor?: string | null
   ): Promise<GetConversationsListResult> => {
-    try {
-      const params: Record<string, string | null | undefined> = {
-        cursor,
-      };
+    const params: Record<string, string | null | undefined> = {
+      cursor,
+    };
 
-      if (agentId) {
-        params.agent_id = agentId;
-      }
-
-      const response = await apiClient.get<GetConversationsResponse>(
-        '/v1/conversations',
-        { params }
-      );
-
-      return {
-        conversations: response.data.data,
-        nextPage: response.data.next_page,
-      };
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      throw error;
+    if (agentId) {
+      params.agent_id = agentId;
     }
+
+    const response = await apiClient.get<GetConversationsResponse>(
+      "/v1/conversations",
+      { params }
+    );
+
+    return {
+      conversations: response.data.data,
+      nextPage: response.data.next_page,
+    };
   },
 
-  // ----------------------------------
-  // CONVERSATION DETAILS
-  // ----------------------------------
+  /* =====================================================
+     CONVERSATION DETAILS
+  ===================================================== */
   getConversationDetails: async (
     conversationId: string
   ): Promise<GetConversationDetailsResult> => {
-    try {
-      const response =
-        await apiClient.get<GetConversationDetailsResponse>(
-          `/v1/conversations/${conversationId}`
-        );
-
-      return {
-        transcription: response.data.data,
-        lead: response.data.lead,
-      };
-    } catch (error) {
-      console.error(
-        `Error fetching details for conversation ${conversationId}:`,
-        error
+    const response =
+      await apiClient.get<GetConversationDetailsResponse>(
+        `/v1/conversations/${conversationId}`
       );
-      throw error;
-    }
+
+    return {
+      transcription: response.data.data,
+      lead: response.data.lead,
+    };
   },
 
-  // ----------------------------------
-  // CONVERSATION AUDIO
-  // ----------------------------------
+  /* =====================================================
+     CONVERSATION AUDIO
+  ===================================================== */
   getConversationAudio: async (
     conversationId: string
   ): Promise<Blob> => {
-    try {
-      const response = await apiClient.get(
-        `/v1/conversations/audio/${conversationId}`,
-        {
-          responseType: 'blob',
-        }
-      );
+    const response = await apiClient.get(
+      `/v1/conversations/audio/${conversationId}`,
+      {
+        responseType: "blob",
+      }
+    );
 
-      return response.data;
-    } catch (error) {
-      console.error(
-        `Error fetching audio for conversation ${conversationId}:`,
-        error
-      );
-      throw error;
-    }
+    return response.data;
   },
 };
 
