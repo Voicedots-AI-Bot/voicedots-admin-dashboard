@@ -1,6 +1,6 @@
-import type { KpiConversation } from "@/types/conversation.types";
+// import type { KpiConversation } from "@/types/conversation.types";
 
-export function groupByDate(conversations: KpiConversation[]) {
+export function groupByDate(conversations: any[]) {
   const map: Record<
     string,
     { date: string; costUsd: number; conversations: number; duration: number }

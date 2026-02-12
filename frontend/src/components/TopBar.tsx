@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, startTransition } from "react";
 import { Bell, Menu, ChevronDown, PanelLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
 import authApi from "@/api/authApi";
 
 interface TopBarProps {
@@ -16,7 +15,6 @@ export function TopBar({
   isSidebarCollapsed,
 }: TopBarProps) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -46,7 +44,11 @@ export function TopBar({
 
   // Remove red dot when notifications opened
   useEffect(() => {
-    if (notifOpen) setHasUnread(false);
+    if (notifOpen) {
+      startTransition(() => {
+        setHasUnread(false);
+      });
+    }
   }, [notifOpen]);
 
   return (
