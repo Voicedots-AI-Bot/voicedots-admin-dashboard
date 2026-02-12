@@ -1,12 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
-from app.config import settings
+from app.models.users_db import User
+from app.config.database import AsyncSessionLocal
+from sqlalchemy import select
 from app.routes import register_routers
 from app.routes.dependencies import get_elevenlabs_client
 from app.helpers.kpi_aggregator import aggregate_conversations
 from app.jwt_auth_middleware import JWTAuthMiddleware
+from app.config.database import engine
+from app import models
 
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Voicedots Admin Backend",
@@ -39,15 +44,25 @@ register_routers(app)
 @app.on_event("startup")
 async def start_kpi_aggregator():
     """
+    Check for db tables.
     Automatically aggregates KPIs in background.
     Runs every 1 hour.
     """
+    
+    async with engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)
+    
     client = get_elevenlabs_client()
 
     async def run_loop():
         while True:
             try:
-                await aggregate_conversations(client, settings.AGENT_ID)
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(User.agent_id))
+                    agent_ids = result.scalars().all()
+
+                    for agent_id in agent_ids:
+                        await aggregate_conversations(client, agent_id, db)
             except Exception as e:
                 print("KPI Aggregator Error:", e)
 

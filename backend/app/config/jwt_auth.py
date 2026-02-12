@@ -1,4 +1,5 @@
 from typing import Dict
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from fastapi import status, Request
 
@@ -16,22 +17,23 @@ class JWTAuth:
     Calls helper functions only
     """
 
-    def login(self, email: str, password: str, user: Dict):
+    def login(self, password: str, user: Dict):
         if not user:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"detail": "Invalid email or password"},
             )
 
-        if not verify_password(password, user["hashed_password"]):
+        if not verify_password(password, user.hashed_password):
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"detail": "Invalid email or password"},
             )
 
         token_payload = {
-            "sub": email,
-            "username": user.get("username"),
+            "sub": str(user.user_id),   
+            "email": user.email,        
+            "username": user.name,
         }
 
         token = create_access_token(token_payload)
@@ -48,20 +50,17 @@ class JWTAuth:
         token = extract_bearer_token(request)
 
         if not token:
-            return JSONResponse(
+            raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Authorization header missing"},
+                detail="Authorization header missing",
             )
 
         payload = decode_token(token)
 
-        if isinstance(payload, JSONResponse):
-            return payload
-
-        if "sub" not in payload:
-            return JSONResponse(
+        if not payload or "sub" not in payload:
+            raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Invalid token payload"},
+                detail="Invalid token",
             )
 
         return payload

@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.config.database import get_db
+from app.models.users_db import User
 from typing import Optional
 import asyncio
-
+import uuid
+from sqlalchemy import select
 from app.routes.dependencies import get_elevenlabs_client
 from app.config.elevenlabs import ElevenLabsClient
 from app.config.logger import get_logger
@@ -18,79 +22,26 @@ router = APIRouter(
     tags=["Conversations"]
 )
 
-
-# --------------------------------------------------
-# KPI SUMMARY + TIMESERIES (FOR GRAPHS)
-# --------------------------------------------------
-@router.get(
-    "/kpis",
-    summary="Get KPI summary + timeseries",
-    description="Return KPI summary and daily timeseries for graphs"
-)
-def get_kpis_full():
-    try:
-        from app.helpers.kpi_helper import get_kpis_with_timeseries
-        return get_kpis_with_timeseries()
-
-    except Exception:
-        logger.exception("Failed to fetch KPI timeseries")
-
-        return {
-            "summary": {
-                "total_conversations": 0,
-                "total_messages": 0,
-                "total_cost_usd": 0,
-                "avg_cost_per_conversation_usd": 0,
-                "total_call_duration_secs": 0,
-                "avg_call_duration_secs": 0,
-            },
-            "timeseries": [],
-        }
-
-# --------------------------------------------------
-# KPI SUMMARY (SAFE + CORRECT SCHEMA)
-# --------------------------------------------------
-@router.get(
-    "/kpis/summary",
-    summary="Get KPI summary",
-    description="Return aggregated KPI metrics for dashboard"
-)
-def get_kpi_summary():
-    try:
-        from app.helpers.kpi_helper import get_kpis
-        return get_kpis()
-
-    except Exception:
-        logger.exception("Failed to fetch KPI summary")
-
-        # ✅ EXACT schema frontend expects
-        return {
-            "total_conversations": 0,
-            "total_messages": 0,
-            "total_cost_usd": 0,
-            "avg_cost_per_conversation_usd": 0,
-            "total_call_duration_secs": 0,
-            "avg_call_duration_secs": 0,
-        }
-
-
 # --------------------------------------------------
 # LIST CONVERSATIONS (TIMEOUT SAFE)
 # --------------------------------------------------
 @router.get("/")
 async def list_conversations(
-    agent_id: Optional[str] = Query(default=None),
+    request: Request,
+    db: AsyncSession = Depends(get_db),
     cursor: Optional[str] = Query(default=None),
     client: ElevenLabsClient = Depends(get_elevenlabs_client),
 ):
     try:
-        data = await asyncio.wait_for(
-            client.list_conversations(
-                agent_id or "agent_6301kdfgwyv4fc1r9vvvar5y2fbw",
-                cursor
-            ),
-            timeout=10,
+        user = request.state.user
+        user_id = uuid.UUID(user["sub"])
+        
+        result = await db.execute(
+            select(User.agent_id).where(User.user_id == user_id)
         )
+        agent_id = result.scalar_one_or_none()
+        
+        data = await client.list_conversations(agent_id, cursor)
 
         if not data:
             raise HTTPException(status_code=404, detail="No conversations found")
@@ -124,10 +75,7 @@ async def get_conversation_details(
     client: ElevenLabsClient = Depends(get_elevenlabs_client),
 ):
     try:
-        data = await asyncio.wait_for(
-            client.get_conversation_details(conversation_id),
-            timeout=10,
-        )
+        data = await client.get_conversation_details(conversation_id)
 
         if not data:
             raise HTTPException(
@@ -164,11 +112,12 @@ async def get_conversation_audio(
     client: ElevenLabsClient = Depends(get_elevenlabs_client),
 ):
     try:
-        return await asyncio.wait_for(
-            client.get_conversation_audio(conversation_id),
-            timeout=10,
-        )
-
+        # return await asyncio.wait_for(
+        #     client.get_conversation_audio(conversation_id),
+        #     timeout=10,
+        # )
+        return await client.get_conversation_audio(conversation_id)
+    
     except asyncio.TimeoutError:
         logger.error(f"Timeout fetching audio {conversation_id}")
         raise HTTPException(status_code=504, detail="Audio service timeout")
