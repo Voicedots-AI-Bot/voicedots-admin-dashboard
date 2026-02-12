@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     ELEVENLABS_API_KEY: str
     AGENT_ID: str
     DATABASE_URL: str
+    FRONTEND_ORIGIN: str
     
     class Config:
         env_file = ".env"

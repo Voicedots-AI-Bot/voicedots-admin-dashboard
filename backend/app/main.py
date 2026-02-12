@@ -5,6 +5,7 @@ from app.models.users_db import User
 from app.config.database import AsyncSessionLocal
 from sqlalchemy import select
 from app.routes import register_routers
+from app.config.settings import settings
 from app.routes.dependencies import get_elevenlabs_client
 from app.helpers.kpi_aggregator import aggregate_conversations
 from app.jwt_auth_middleware import JWTAuthMiddleware
@@ -24,9 +25,10 @@ app = FastAPI(
 # ---------------------------
 # CORS
 # ---------------------------
+allowed_origins = [origin.strip() for origin in settings.FRONTEND_ORIGIN.split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://voicedots.io","https://*.io"],  # Update with your frontend URL
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
