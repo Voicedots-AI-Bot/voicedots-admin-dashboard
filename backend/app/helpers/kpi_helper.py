@@ -57,7 +57,8 @@ async def add_conversation_kpi(
         )
 
         db.add(conversation)
-
+        await db.commit()
+        
         # Fetch usage
         usage_result = await db.execute(
             select(Usage).where(Usage.user_id == user_id)
@@ -95,7 +96,7 @@ async def get_kpis(user_id: UUID, db: AsyncSession):
             select(Usage).where(Usage.user_id == user_id)
         )
         usage = result.scalar_one_or_none()
-
+        logger.info(f"Fetched usage for user {user_id}: {usage}")
         if not usage:
             return {
                 "total_conversations": 0,
