@@ -3,10 +3,11 @@ from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone, timedelta
 from app.models.usage_db import Usage
-from app.models.conversation_details import ConversationDetails
+from app.models.conversation_details_db import ConversationDetails
 from app.config.constants import PRICE_PER_1000_CREDITS
 from uuid import UUID
 from app.config.logger import get_logger
+from decimal import Decimal
 
 logger = get_logger("KPI-Helper")
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -36,7 +37,8 @@ async def add_conversation_kpi(
 
         credits_used = llm_charge + call_charge
         cost_usd = (credits_used / 1000) * PRICE_PER_1000_CREDITS
-
+        cost_usd=Decimal(str(cost_usd))
+        
         dt = (
             datetime.fromtimestamp(start_time_unix_secs, IST)
             if start_time_unix_secs
@@ -49,7 +51,7 @@ async def add_conversation_kpi(
             timestamp=dt.strftime("%I:%M %p"),
             date=dt.strftime("%d %b %Y"),
             cost_credits=credits_used,
-            cost_usd=int(round(cost_usd)),
+            cost_usd=cost_usd,
             call_duration_secs=call_duration_secs,
             messages_count=messages_count,
         )
@@ -76,7 +78,7 @@ async def add_conversation_kpi(
         usage.total_conversations += 1
         usage.total_messages += messages_count
         usage.total_credits += credits_used
-        usage.total_cost_usd += int(round(cost_usd))
+        usage.total_cost_usd += cost_usd
         usage.total_call_duration_secs += call_duration_secs
 
         await db.commit()

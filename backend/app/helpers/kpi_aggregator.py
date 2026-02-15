@@ -2,7 +2,7 @@ import asyncio
 from app.config.logger import get_logger
 from app.helpers.kpi_helper import add_conversation_kpi
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.conversation_details import ConversationDetails
+from app.models.conversation_details_db import ConversationDetails
 from app.models.users_db import User
 from sqlalchemy import select
 
@@ -68,6 +68,7 @@ async def aggregate_conversations(
 
                 # already aggregated
                 if conv_id in processed_conversations:
+                    logger.info("Skipping already processed conversation: {conv_id}")
                     continue
 
                 # only successful calls
@@ -77,26 +78,20 @@ async def aggregate_conversations(
                 # ---- Conversation Level Protection ----
                 try:
                     details = await client.get_conversation_details(conv_id)
-
                     # meta = details.get("metadata", {})
                     meta = getattr(details, "metadata", {}) or {}
                     messages_count = len(getattr(details, "transcript", []) or [])
+                    charging_info = getattr(meta, "charging", None)
 
                     await add_conversation_kpi(
                         db=db,
                         user_id=user_id,
                         conversation_id=conv_id,
-                        # llm_charge=meta.get("llm_charge", 0),
-                        llm_charge=getattr(meta, "llm_charge", 0) or 0,
-                        # call_charge=meta.get("call_charge", 0),
-                        call_charge=getattr(meta, "call_charge", 0) or 0,
+                        llm_charge=getattr(charging_info, "llm_charge", 0) if charging_info else 0,
+                        call_charge=getattr(charging_info, "call_charge", 0) if charging_info else 0,
                         messages_count=messages_count,
-                        # call_duration_secs=meta.get("call_duration_secs", 0),
                         call_duration_secs=getattr(meta, "call_duration_secs", 0) or 0,
                         start_time_unix_secs=(
-                            # meta.get("start_time_unix_secs")
-                            # or meta.get("accepted_time_unix_secs")
-                            # or meta.get("created_at_unix_secs")
                             getattr(meta, "start_time_unix_secs", None)
                             or getattr(meta, "accepted_time_unix_secs", None)
                             or getattr(meta, "created_at_unix_secs", None)
