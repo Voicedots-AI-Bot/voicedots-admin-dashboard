@@ -30,6 +30,8 @@ async def login(
             )
         
         return jwt_auth.login(password, user)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Unexpected error during login")
         raise HTTPException(
