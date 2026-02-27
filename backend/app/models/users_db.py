@@ -25,3 +25,9 @@ class User(Base):
         back_populates="user",
         cascade="all, delete"
     )
+    
+    leads = relationship(
+        "Lead",
+        back_populates="user",
+        cascade="all, delete",
+    )

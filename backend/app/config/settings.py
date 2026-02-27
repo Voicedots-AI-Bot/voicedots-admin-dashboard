@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     AGENT_ID: str
     DATABASE_URL: str
     FRONTEND_ORIGIN: str
+    WEBHOOK_SECRET: str
     
     class Config:
         env_file = ".env"
