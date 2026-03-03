@@ -31,3 +31,9 @@ class User(Base):
         back_populates="user",
         cascade="all, delete",
     )
+    
+    tickets = relationship(
+        "Ticket", 
+        back_populates="user", 
+        cascade="all, delete"
+    )

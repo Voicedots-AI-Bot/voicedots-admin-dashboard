@@ -7,10 +7,10 @@ class Usage(Base):
     __tablename__ = "usage"
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), primary_key=True)
-    total_conversations = Column(Integer, index=True)
-    total_messages = Column(Integer, index=True)
-    total_credits = Column(Integer, index=True)
-    total_cost_usd = Column(Numeric(12,6), index=True)
-    total_call_duration_secs = Column(Integer, index=True)
+    total_conversations = Column(Integer)
+    total_messages = Column(Integer)
+    total_credits = Column(Integer)
+    total_cost_usd = Column(Numeric(12,6))
+    total_call_duration_secs = Column(Integer)
     
     user = relationship("User", back_populates="usage")

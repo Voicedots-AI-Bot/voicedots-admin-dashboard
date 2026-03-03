@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     ELEVENLABS_API_KEY: str
@@ -6,10 +6,12 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     FRONTEND_ORIGIN: str
     WEBHOOK_SECRET: str
+    ALLOWED_HOSTS: list[str]
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 settings = Settings()

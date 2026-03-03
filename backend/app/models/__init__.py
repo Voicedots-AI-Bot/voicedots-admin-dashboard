@@ -2,4 +2,5 @@ from app.config.database import Base
 from app.models.users_db import User
 from app.models.usage_db import Usage
 from app.models.leads_db import Lead
+from app.models.ticket_db import Ticket
 from app.models.conversation_details_db import ConversationDetails
