@@ -9,6 +9,7 @@ import { ConversationDetails } from "@/pages/dashboard/ConversationDetails";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import { LeadsPage } from "@/pages/dashboard/LeadsPage";
+import { TicketsPage } from "@/pages/dashboard/TicketsPage";
 
 const AppRoutes = () => {
   return (
@@ -37,9 +38,8 @@ const AppRoutes = () => {
           {/* LEADS */}
           <Route path="leads" element={<LeadsPage />} />
 
-          <Route path="leads" element={<LeadsPage />} />
-          <Route path="conversations/:id" element={<ConversationDetails />} />
-
+          {/* TICKETS */}
+          <Route path="tickets" element={<TicketsPage />} />
 
           {/* SETTINGS */}
           <Route path="settings" element={<SettingsPage />} />

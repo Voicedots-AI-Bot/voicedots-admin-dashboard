@@ -1,4 +1,4 @@
-import { Home, MessageSquare, Settings, LogOut, Users } from "lucide-react";
+import { Home, MessageSquare, Settings, LogOut, Users, Ticket } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authApi from "@/api/authApi";
 import SidebarLogo from "./SideBarLogo";
@@ -33,6 +33,12 @@ export function Sidebar({
       path: "/dashboard/leads",
     },
     {
+      id: "tickets",
+      icon: Ticket,
+      label: "Tickets",
+      path: "/dashboard/tickets",
+    },
+    {
       id: "settings",
       icon: Settings,
       label: "Settings",
@@ -44,9 +50,8 @@ export function Sidebar({
     <>
       {/* Mobile Backdrop */}
       <div
-        className={`fixed inset-0 z-[60] bg-gray-900/50 backdrop-blur-sm md:hidden transition-opacity ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 z-[60] bg-gray-900/50 backdrop-blur-sm md:hidden transition-opacity ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
         onClick={onClose}
       />
 
@@ -83,10 +88,9 @@ export function Sidebar({
                     onClose();
                   }}
                   className={`w-full flex items-center gap-x-3.5 py-3 px-4 text-sm rounded-lg transition-colors
-                    ${
-                      isActive
-                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
-                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-300"
+                    ${isActive
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                      : "text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-300"
                     }
                     ${isCollapsed ? "md:justify-center md:px-0" : ""}`}
                 >
