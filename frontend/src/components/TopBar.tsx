@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, startTransition } from "react";
 import { Bell, Menu, ChevronDown, PanelLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import authApi from "@/api/authApi";
+import { useAuth } from "@/context/AuthContext";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -16,9 +17,13 @@ export function TopBar({
 }: TopBarProps) {
   const navigate = useNavigate();
 
+  const { user, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
+
+  // Avatar initials
+  const initials = user?.name ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2) : "U";
 
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -135,13 +140,17 @@ export function TopBar({
               }}
               className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-2 sm:px-3 py-1.5 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-50 dark:bg-slate-900 dark:border-slate-700 dark:text-white dark:hover:bg-slate-800"
             >
-              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs">
-                SK
+              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs overflow-hidden">
+                {user?.profile_picture ? (
+                  <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </div>
 
               {/* Hide name on small screens */}
               <span className="hidden md:block text-gray-600 dark:text-gray-400">
-                Sai Kumar
+                {user?.name || "User"}
               </span>
 
               <ChevronDown
@@ -166,10 +175,10 @@ export function TopBar({
               >
                 <div className="p-4 border-b border-gray-200 dark:border-slate-700">
                   <p className="text-sm font-semibold text-gray-800 dark:text-white">
-                    Sai Kumar
+                    {user?.name || "User"}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    saikumar@example.com
+                    {user?.email || ""}
                   </p>
                 </div>
 
@@ -199,6 +208,7 @@ export function TopBar({
                   <button
                     onClick={() => {
                       setProfileOpen(false);
+                      logout();
                       authApi.logout().then(() => {
                         navigate("/login", { replace: true });
                       });

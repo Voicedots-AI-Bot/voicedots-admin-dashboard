@@ -1,31 +1,54 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
+import usersApi from "../api/usersApi";
+import type { User } from "../api/usersApi";
 
 type AuthContextType = {
   isAuthenticated: boolean;
+  user: User | null;
   login: () => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(
-    () => localStorage.getItem("auth") === "true"
+    () => !!localStorage.getItem("access_token")
   );
+  const [user, setUser] = useState<User | null>(null);
+
+  const refreshUser = useCallback(async () => {
+    if (isAuthenticated) {
+      try {
+        const userData = await usersApi.getMe();
+        setUser(userData);
+      } catch (error) {
+        console.error("Failed to fetch user", error);
+        // Could logout here if token is invalid
+        // logout();
+      }
+    } else {
+      setUser(null);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
 
   const login = () => {
-    localStorage.setItem("auth", "true");
     setIsAuthenticated(true);
   };
 
   const logout = () => {
-    localStorage.removeItem("auth");
     setIsAuthenticated(false);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

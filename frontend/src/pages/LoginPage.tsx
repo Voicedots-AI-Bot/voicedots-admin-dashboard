@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import authApi from "@/api/authApi";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +27,7 @@ const LoginPage = () => {
     try {
       setLoading(true);
       await authApi.login(email, password);
+      login();
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setError(
@@ -34,7 +37,7 @@ const LoginPage = () => {
     } finally {
       setLoading(false);
     }
-};
+  };
 
 
   return (
@@ -43,7 +46,7 @@ const LoginPage = () => {
         {/* Header */}
         <div className="text-center mb-6">
           <h3
-          className="
+            className="
             text-xl md:text-2xl font-bold tracking-tighter mb-6
             bg-clip-text
             bg-gradient-to-b
@@ -56,7 +59,7 @@ const LoginPage = () => {
               className="h-[1.1em] w-auto inline-block align-middle -translate-y-[0.1em] mr-[-0.3em]"
             />oiceDots
           </h3>
-          
+
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
             Admin Portal
           </h1>
@@ -68,7 +71,7 @@ const LoginPage = () => {
 
         {/* Card */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 px-6 py-8 sm:px-8">
-          <form  className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleLogin}>
             {/* Error */}
             {error && (
               <div
