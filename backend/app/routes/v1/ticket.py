@@ -8,7 +8,7 @@ from app.config.settings import settings
 from app.schemas.ticket_schema import TicketCreateRequest
 from sqlalchemy import select
 
-logger = get_logger("LeadsRouter")
+logger = get_logger("TicketRouter")
 
 router = APIRouter(
     prefix="/v1/ticket",
@@ -116,12 +116,12 @@ async def update_ticket_status(
 )
 async def save_ticket(
     payload: TicketCreateRequest,
-    authorization: str = Header(...),
+    x_webhook_secret: str = Header(...),
     user_id: str = Header(...),
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        if authorization not in settings.ALLOWED_HOSTS:
+        if x_webhook_secret != settings.WEBHOOK_SECRET:
             raise HTTPException(
                 status_code=401,
                 detail="Unauthorised request",

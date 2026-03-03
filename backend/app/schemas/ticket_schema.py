@@ -7,3 +7,6 @@ class TicketCreateRequest(BaseModel):
     category: str
     sub_category: str
     description: str    
+
+class DemoRequest(BaseModel):
+    student_id: str
