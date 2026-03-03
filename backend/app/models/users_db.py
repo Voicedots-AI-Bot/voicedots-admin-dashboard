@@ -32,7 +32,7 @@ class User(Base):
         cascade="all, delete",
     )
     
-    tickets = relationship(
+    ticket = relationship(
         "Ticket", 
         back_populates="user", 
         cascade="all, delete"
