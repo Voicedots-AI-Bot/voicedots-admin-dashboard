@@ -18,4 +18,4 @@ class Ticket(Base):
     status = Column(String)
     
     
-    user = relationship("User", back_populates="usage")
+    user = relationship("User", back_populates="ticket")

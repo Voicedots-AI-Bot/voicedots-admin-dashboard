@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     FRONTEND_ORIGIN: str
     WEBHOOK_SECRET: str
-    ALLOWED_HOSTS: list[str]
+    STUDENTS_IDS: list[str]
     
     model_config = SettingsConfigDict(
         env_file=".env",
