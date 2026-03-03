@@ -5,6 +5,8 @@ from app.routes.v1.leads import router as leads
 from app.routes.v1.ticket import router as ticket
 from app.routes.v1.demo_routes import router as demo
 from app.routes.v1.auth import router as auth
+from app.routes.v1.ticket import router as ticket
+
 def register_routers(app: FastAPI):
     app.include_router(auth)
     app.include_router(conversation)

@@ -60,8 +60,9 @@ async def list_conversations(
 
     except Exception as e:
         logger.exception("Failed to fetch conversations")
+        status_code = getattr(e, "status_code", 500)
         raise HTTPException(
-            status_code=500,
+            status_code=status_code,
             detail=f"Failed to fetch conversations: {str(e)}",
         )
 

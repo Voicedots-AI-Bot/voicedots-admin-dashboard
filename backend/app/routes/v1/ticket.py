@@ -25,14 +25,10 @@ router = APIRouter(
     description="Retrieve all raised tickets",
 )
 async def list_tickets(
-    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        user = request.state.user
-        user_id = uuid.UUID(user["sub"])
-        
-        query = select(Ticket).where(Ticket.user_id == user_id)
+        query = select(Ticket)
         result = await db.execute(query)
         
         tickets = result.scalars().all()
@@ -74,16 +70,12 @@ async def list_tickets(
 )
 async def update_ticket_status(
     ticket_id: uuid.UUID,
-    request: Request,
+    status: str = Query(..., description="New status for the ticket"),
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        user = request.state.user
-        user_id = uuid.UUID(user["sub"])
-        
         query = select(Ticket).where(
-            Ticket.ticket_id == ticket_id,
-            Ticket.user_id == user_id
+            Ticket.ticket_id == ticket_id
         )
         result = await db.execute(query)
         ticket = result.scalar_one_or_none()
@@ -94,8 +86,7 @@ async def update_ticket_status(
                 detail="Ticket not found",
             )
 
-        if ticket.status == "open":
-            ticket.status = "closed"
+        ticket.status = status
 
         await db.commit()
         await db.refresh(ticket)

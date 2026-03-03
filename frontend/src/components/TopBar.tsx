@@ -73,9 +73,8 @@ export function TopBar({
 
         {/* RIGHT */}
         <div
-          className={`flex items-center gap-3 sm:gap-4 transition-all ${
-            isSidebarCollapsed ? "md:mr-2" : ""
-          }`}
+          className={`flex items-center gap-3 sm:gap-4 transition-all ${isSidebarCollapsed ? "md:mr-2" : ""
+            }`}
         >
           {/* 🔔 Notifications */}
           <div className="relative" ref={notifRef}>
@@ -147,9 +146,8 @@ export function TopBar({
 
               <ChevronDown
                 size={14}
-                className={`text-gray-400 transition ${
-                  profileOpen ? "rotate-180" : ""
-                }`}
+                className={`text-gray-400 transition ${profileOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
