@@ -12,6 +12,7 @@ class User(Base):
     name = Column(String, index=True)
     agent_id = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    profile_picture = Column(String, nullable=True)
     
     usage = relationship(
         "Usage",
