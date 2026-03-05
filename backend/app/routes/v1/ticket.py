@@ -116,20 +116,31 @@ async def update_ticket_status(
 )
 async def save_ticket(
     payload: TicketCreateRequest,
-    x_webhook_secret: str = Header(...),
-    user_id: str = Header(...),
+    # x_webhook_secret: str = Header(...),
+    # user_id: str = Header(...),
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        if x_webhook_secret != settings.WEBHOOK_SECRET:
-            raise HTTPException(
-                status_code=401,
-                detail="Unauthorised request",
+        # if x_webhook_secret != settings.WEBHOOK_SECRET:
+        #     raise HTTPException(
+        #         status_code=401,
+        #         detail="Unauthorised request",
+        #     )
+        
+        student_id = payload.student_id.strip()
+
+        # Check existence
+        if student_id not in settings.STUDENTS_IDS:
+             raise HTTPException(
+                status_code=404,
+                detail="Student ID doesn't exist"
             )
+            
+        logger.info(payload)
         
         new_ticket = Ticket(
             ticket_id=uuid.uuid4(),
-            user_id=user_id,
+            user_id=uuid.UUID(payload.user_id),
             name=payload.name,
             email=payload.email,
             mobile=payload.mobile,
@@ -155,5 +166,5 @@ async def save_ticket(
         logger.exception(f"Unexpected error while saving ticket - {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to save ticket for user_id {user_id}",
+            detail=f"Failed to save ticket for user_id {payload.user_id}",
         )
