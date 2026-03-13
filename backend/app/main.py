@@ -10,6 +10,7 @@ from app.routes.dependencies import get_elevenlabs_client
 from app.helpers.kpi_aggregator import aggregate_conversations
 from app.jwt_auth_middleware import JWTAuthMiddleware
 from app.config.database import engine
+from app.config.constants import SCHEDULER_TIME
 from app import models
 
 # models.Base.metadata.create_all(bind=engine)
@@ -69,7 +70,7 @@ async def start_kpi_aggregator():
                 print("KPI Aggregator Error:", e)
 
             #  Run every 1 hour 
-            await asyncio.sleep(3600)
+            await asyncio.sleep(SCHEDULER_TIME)
 
     asyncio.create_task(run_loop())
 
