@@ -4,14 +4,14 @@ import type { GetKpisResult, KpiSummary } from "@/types/conversation.types";
 export const kpiAPI = {
   getKpiSummary: async (): Promise<KpiSummary> => {
     const response = await apiClient.get<KpiSummary>(
-      "/v1/kpis/summary"
+      "/v1/kpis/summary/"
     );
     return response.data;
   },
 
   getKpis: async (): Promise<GetKpisResult> => {
     const response = await apiClient.get<GetKpisResult>(
-      "/v1/kpis"
+      "/v1/kpis/"
     );
     return response.data;
   },

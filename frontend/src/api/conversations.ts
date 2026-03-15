@@ -24,7 +24,7 @@ const conversationsApi = {
     }
 
     const response = await apiClient.get<GetConversationsResponse>(
-      "/v1/conversations",
+      "/v1/conversations/",
       { params }
     );
 

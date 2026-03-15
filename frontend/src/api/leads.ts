@@ -31,7 +31,7 @@ const leadsApi = {
   getLeads: async (): Promise<Lead[]> => {
     try {
       const response = await apiClient.get<GetLeadsResponse>(
-        "/v1/leads"
+        "/v1/leads/"
       );
       return response.data.data;
     } catch (error) {
