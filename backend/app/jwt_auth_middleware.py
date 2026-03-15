@@ -10,6 +10,7 @@ EXEMPT_PATHS = {
     "/v1/auth/login",
     "/v1/auth/generate_hashpassword",
     "/v1/leads/save_lead",
+    "/v1/ticket/raise_ticket",
     "/docs",
     "/redoc",
     "/openapi.json",
