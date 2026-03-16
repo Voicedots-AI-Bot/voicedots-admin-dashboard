@@ -81,7 +81,7 @@ export function LeadDetailsDrawer({
       </div>
 
       {/* ================= STICKY ACTIONS ================= */}
-      <div className="sticky top-[130px] z-10 bg-white border-b px-5 py-4 grid grid-cols-3 gap-3">
+      <div className="sticky top-[130px] z-10 bg-white border-b px-5 py-4 mb-10 grid grid-cols-3 gap-3">
         <Action icon={<Phone size={16} />} label="Call" disabled />
         <Action icon={<Mail size={16} />} label="Email" />
         <Action icon={<MessageCircle size={16} />} label="WhatsApp" />
@@ -113,7 +113,7 @@ export function LeadDetailsDrawer({
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 text-sm">
         {tab === "details" && (
           <>
-            <InfoRow label="Phone" value={lead.phone} />
+            <InfoRow label="Phone" value={lead.mobile} />
             <InfoRow label="Email" value={lead.email} />
 
             <div>

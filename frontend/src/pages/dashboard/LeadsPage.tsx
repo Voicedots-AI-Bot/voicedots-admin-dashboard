@@ -39,8 +39,8 @@ export function LeadsPage() {
 
   const filteredLeads = leads.filter(
     (l) =>
-      l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.email.toLowerCase().includes(search.toLowerCase())
+      l.name?.toLowerCase().includes(search.toLowerCase()) ||
+      l.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalLeads = leads.length;
@@ -156,7 +156,7 @@ export function LeadsPage() {
                 {/* PHONE — DESKTOP */}
                 <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 w-[180px]">
                   <Phone size={14} />
-                  {lead.phone}
+                  {lead.mobile}
                 </div>
 
                 {/* STATUS */}
