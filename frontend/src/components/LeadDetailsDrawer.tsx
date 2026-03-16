@@ -116,9 +116,9 @@ export function LeadDetailsDrawer({
             <InfoRow label="Phone" value={lead.mobile} />
             <InfoRow label="Email" value={lead.email} />
 
-            <div>
-              <p className="text-gray-500 mb-1">Business Description</p>
-              <p className="text-gray-700 leading-relaxed">
+            <div className="flex justify-between items-start">
+              <p className="text-gray-500">Business Description</p>
+              <p className="font-medium leading-relaxed text-right max-w-xl">
                 {lead.business_description}
               </p>
             </div>

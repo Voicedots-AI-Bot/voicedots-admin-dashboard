@@ -3,15 +3,7 @@ import { apiClient } from "@/api/apiClient";
 /* ================= TYPES ================= */
 
 export type LeadStatus = "Qualified" | "Unqualified";
-
-export interface Lead {
-  conversation_id: string;
-  name?: string;
-  email?: string;
-  mobile?: string;
-  business_description?: string;
-  status?: LeadStatus;
-}
+import type { Lead } from "@/types/lead.types";
 
 interface GetLeadsResponse {
   status: string;

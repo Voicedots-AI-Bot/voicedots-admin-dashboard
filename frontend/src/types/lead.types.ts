@@ -4,7 +4,7 @@ export interface Lead {
   conversation_id: string;
   name: string;
   email: string;
-  phone: string;
+  mobile: string;
   business_description: string;
   status: LeadStatus;
 }
