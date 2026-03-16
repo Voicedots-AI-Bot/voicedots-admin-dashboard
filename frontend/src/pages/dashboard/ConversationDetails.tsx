@@ -200,9 +200,9 @@ function LeadInfo({ lead }: any) {
           </div>
         </div>
 
-        <InfoRow icon={<Phone size={14} />} label="Phone" value={lead?.phone_number || "N/A"} />
+        <InfoRow icon={<Phone size={14} />} label="Phone" value={lead?.mobile || "N/A"} />
         <InfoRow icon={<Mail size={14} />} label="Email" value={lead?.email || "N/A"} />
-        <InfoRow icon={<Briefcase size={14} />} label="Business" value={lead?.business_desc || "N/A"} />
+        <InfoRow icon={<Briefcase size={14} />} label="Business" value={lead?.business_description || "N/A"} />
       </div>
 
       <div className="bg-white border rounded-lg">
@@ -213,9 +213,9 @@ function LeadInfo({ lead }: any) {
         <div className="px-4 py-3 space-y-2 text-sm">
           <SummaryRow icon={<Clock size={14} />} label="Duration" value="3m 49s" />
           <SummaryRow icon={<PhoneCall size={14} />} label="Outcome" value="No Response" />
-          <p className="text-xs text-gray-500">
+          {/* <p className="text-xs text-gray-500">
             User did not respond clearly. No lead qualification captured.
-          </p>
+          </p> */}
         </div>
       </div>
     </div>
