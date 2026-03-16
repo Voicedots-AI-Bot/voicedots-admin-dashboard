@@ -1,6 +1,12 @@
 # 1. Use an official, lightweight Python runtime as a parent image
 FROM python:3.11-slim
 
+# Install system dependencies needed to build psycopg2
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # 2. Set the working directory inside the container
 WORKDIR /app
 
