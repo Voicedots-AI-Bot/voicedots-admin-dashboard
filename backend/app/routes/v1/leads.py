@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users_db import User
 from app.models.leads_db import Lead
 from sqlalchemy import select
+import uuid
 
 logger = get_logger("LeadsRouter")
 
@@ -25,11 +26,20 @@ router = APIRouter(
     description="Retrieve all leads",
 )
 async def list_leads(
+    request: Request,
     status: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        query = select(Lead)
+        user = request.state.user
+        user_id = uuid.UUID(user["sub"])
+        
+        result = await db.execute(
+            select(User.agent_id).where(User.user_id == user_id)
+        )
+        agent_id = result.scalar_one_or_none()
+
+        query = select(Lead).where(Lead.agent_id == agent_id)
 
         if status:
             query = query.where(Lead.status.ilike(status))
