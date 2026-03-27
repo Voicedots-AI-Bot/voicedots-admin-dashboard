@@ -39,8 +39,8 @@ export function LeadsPage() {
 
   const filteredLeads = leads.filter(
     (l) =>
-      l.name?.toLowerCase().includes(search.toLowerCase()) ||
-      l.email?.toLowerCase().includes(search.toLowerCase())
+      (l.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (l.email ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   const totalLeads = leads.length;
@@ -137,7 +137,7 @@ export function LeadsPage() {
                 {/* LEFT */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold shrink-0">
-                    {lead.name
+                    {(lead.name ?? "?")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
@@ -145,10 +145,10 @@ export function LeadsPage() {
 
                   <div className="min-w-0">
                     <p className="font-medium truncate">
-                      {lead.name}
+                      {lead.name ?? "Unknown"}
                     </p>
                     <p className="text-xs text-gray-500 truncate">
-                      {lead.email}
+                      {lead.email ?? "—"}
                     </p>
                   </div>
                 </div>

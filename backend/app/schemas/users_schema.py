@@ -7,6 +7,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     profile_picture: Optional[str] = None
+    agent_id: Optional[str] = None
     
     class Config:
         from_attributes = True

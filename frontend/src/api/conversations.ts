@@ -7,6 +7,13 @@ import type {
 } from "@/types/conversation.types";
 
 
+const getApiVersion = (agentId?: string | null): string => {
+  if (agentId && agentId.startsWith("voicedots_agent_")) {
+    return "v2";
+  }
+  return "v1";
+};
+
 const conversationsApi = {
   /* =====================================================
      LIST CONVERSATIONS
@@ -23,8 +30,10 @@ const conversationsApi = {
       params.agent_id = agentId;
     }
 
+    const version = getApiVersion(agentId);
+
     const response = await apiClient.get<GetConversationsResponse>(
-      "/v1/conversations/",
+      `/${version}/conversations/`,
       { params }
     );
 
@@ -38,11 +47,13 @@ const conversationsApi = {
      CONVERSATION DETAILS
   ===================================================== */
   getConversationDetails: async (
-    conversationId: string
+    conversationId: string,
+    agentId?: string | null
   ): Promise<GetConversationDetailsResult> => {
+    const version = getApiVersion(agentId);
     const response =
       await apiClient.get<GetConversationDetailsResponse>(
-        `/v1/conversations/${conversationId}`
+        `/${version}/conversations/${conversationId}`
       );
 
     return {
@@ -55,10 +66,12 @@ const conversationsApi = {
      CONVERSATION AUDIO
   ===================================================== */
   getConversationAudio: async (
-    conversationId: string
+    conversationId: string,
+    agentId?: string | null
   ): Promise<Blob> => {
+    const version = getApiVersion(agentId);
     const response = await apiClient.get(
-      `/v1/conversations/audio/${conversationId}`,
+      `/${version}/conversations/audio/${conversationId}`,
       {
         responseType: "blob",
       }

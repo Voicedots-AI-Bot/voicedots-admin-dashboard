@@ -39,7 +39,11 @@ async def list_leads(
         )
         agent_id = result.scalar_one_or_none()
 
-        query = select(Lead).where(Lead.agent_id == agent_id)
+        query = select(Lead).where(
+            Lead.agent_id == agent_id,
+            # Only include leads that have at least one piece of contact info
+            (Lead.name.isnot(None)) | (Lead.email.isnot(None)) | (Lead.mobile.isnot(None))
+        )
 
         if status:
             query = query.where(Lead.status.ilike(status))

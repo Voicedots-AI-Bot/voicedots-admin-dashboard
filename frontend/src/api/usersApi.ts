@@ -5,6 +5,7 @@ export interface User {
     name: string;
     email: string;
     profile_picture?: string;
+    agent_id?: string;
 }
 
 export interface UserUpdateRequest {

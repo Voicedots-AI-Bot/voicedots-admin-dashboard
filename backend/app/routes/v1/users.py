@@ -29,7 +29,8 @@ async def get_me(request: Request, db: AsyncSession = Depends(get_db)):
             "user_id": str(user.user_id),
             "name": user.name,
             "email": user.email,
-            "profile_picture": user.profile_picture
+            "profile_picture": user.profile_picture,
+            "agent_id": user.agent_id
         }
         return response_dict
     except HTTPException:
@@ -71,7 +72,8 @@ async def update_me(payload: UserUpdateRequest, request: Request, db: AsyncSessi
             "user_id": str(user.user_id),
             "name": user.name,
             "email": user.email,
-            "profile_picture": user.profile_picture
+            "profile_picture": user.profile_picture,
+            "agent_id": user.agent_id
         }
     except HTTPException:
         raise
