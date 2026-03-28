@@ -8,7 +8,7 @@ from app.models.leads_db import Lead
 from app.models.users_db import User
 from sqlalchemy import select
 from datetime import datetime
-from app.helpers.conversation_helper import conversation_detail_filter
+from app.helpers.conversation_helper import conversation_detail_filter, get_lead_data
 
 logger = get_logger("KPI-Aggregator")
 
@@ -105,6 +105,39 @@ async def aggregate_conversations(
                                 or getattr(meta, "created_at_unix_secs", None)
                             ),
                         )
+
+                    analysis = getattr(details, "analysis", None)
+                    _, lead_data = get_lead_data(analysis)
+
+                    if lead_data:
+                        def safe_str(val):
+                            if val is None: return None
+                            if isinstance(val, float) and val.is_integer(): return str(int(val))
+                            return str(val)
+
+                        name = safe_str(lead_data.get("name"))
+                        email = safe_str(lead_data.get("email"))
+                        mobile = safe_str(lead_data.get("mobile"))
+                        description = safe_str(lead_data.get("description"))
+
+                        # Only save lead if it has at least one piece of contact info
+                        if name or email or mobile:
+                            # Check if lead already exists for this conversation (e.g., from webhook)
+                            existing_lead = await db.execute(
+                                select(Lead).where(Lead.conversation_id == conv_id)
+                            )
+                            if not existing_lead.scalar_one_or_none():
+                                new_lead = Lead(
+                                    agent_id=agent_id,
+                                    conversation_id=conv_id,
+                                    name=name,
+                                    email=email,
+                                    mobile=mobile,
+                                    business_description=description,
+                                    status="Qualified" if email is not None or mobile is not None else "Unqualified"
+                                )
+                                db.add(new_lead)
+
 
                     # if conv_id not in processed_db_convs:
                     #     filtered_transcript, lead_data = conversation_detail_filter(details)
