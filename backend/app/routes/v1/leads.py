@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users_db import User
 from app.models.leads_db import Lead
 from sqlalchemy import select
-from helpers.lead_helper import is_valid, extract
+from app.helpers.lead_helper import is_valid, extract
 import uuid
 
 logger = get_logger("LeadsRouter")
