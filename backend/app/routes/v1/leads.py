@@ -171,6 +171,8 @@ async def save_lead_details(request: Request, db: AsyncSession = Depends(get_db)
             raise HTTPException(status_code=404, detail="Invalid agent_id")
 
         if is_valid(email) is None and is_valid(mobile) is None:
+            if is_valid(name) is None:
+                return
             status = "Unqualified"
         else:
             status = "Qualified"
