@@ -132,6 +132,7 @@ async def aggregate_conversations(
                             name = safe_str(lead_data.get("name"))
                             email = safe_str(lead_data.get("email"))
                             mobile = safe_str(lead_data.get("mobile"))
+                            description = safe_str(lead_data.get("description"))
 
                             # Only save lead if it has at least one piece of contact info
                             if name or email or mobile:
@@ -146,8 +147,8 @@ async def aggregate_conversations(
                                         name=name,
                                         email=email,
                                         mobile=mobile,
-                                        business_description=safe_str(lead_data.get("business_description")),
-                                        status=safe_str(lead_data.get("status"))
+                                        business_description=description,
+                                        status="Qualified" if email is not None or mobile is not None else "Unqualified"
                                     )
                                     db.add(new_lead)
 
