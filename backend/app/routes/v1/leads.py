@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users_db import User
 from app.models.leads_db import Lead
 from sqlalchemy import select
+from helpers.lead_helper import is_valid, extract
 import uuid
 
 logger = get_logger("LeadsRouter")
@@ -155,19 +156,24 @@ async def save_lead_details(request: Request, db: AsyncSession = Depends(get_db)
         agent_id = data.get("data", {}).get("agent_id")
         conversation_id = data.get("data", {}).get("conversation_id")
 
-        name = lead_data.get("name", {}).get("value")
-        email = lead_data.get("email", {}).get("value")
-        mobile = lead_data.get("mobile", {}).get("value")
-        business_description = lead_data.get("description", {}).get("value")
+        name = extract(lead_data, "name")
+        email = extract(lead_data, "email")
+        mobile = extract(lead_data, "mobile")
+        business_description = extract(lead_data, "description")
 
         # Validate agent exists
         result = await db.execute(
             select(User).where(User.agent_id == agent_id)
         )
         user = result.scalar_one_or_none()
-
+        
         if not user:
             raise HTTPException(status_code=404, detail="Invalid agent_id")
+
+        if not is_valid(email) and not is_valid(mobile):
+            status = "Unqualified"
+        else:
+            status = "Qualified"
 
         new_lead = Lead(
             agent_id=agent_id,
@@ -176,7 +182,7 @@ async def save_lead_details(request: Request, db: AsyncSession = Depends(get_db)
             email=email,
             mobile=mobile,
             business_description=business_description,
-            status="Unqualified"
+            status=status
         )
 
         db.add(new_lead)
