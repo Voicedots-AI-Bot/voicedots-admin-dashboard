@@ -38,7 +38,9 @@ async def aggregate_conversations(
     try:
         # Fetch already processed conversations
         try:
-            result_details = await db.execute(select(ConversationDetails.conversation_id))
+            user_id = await get_user_id_by_agent_id(db, agent_id)
+            
+            result_details = await db.execute(select(ConversationDetails.conversation_id).where(ConversationDetails.user_id == user_id))
             processed_conversations = set(result_details.scalars().all())
 
             # result_convs = await db.execute(select(Conversation.conversation_id))
@@ -50,7 +52,7 @@ async def aggregate_conversations(
         cursor = None
         page = 0
         MAX_PAGES = 50
-        user_id = await get_user_id_by_agent_id(db, agent_id)  # Implement this helper to fetch user_id from agent_id
+        
         while True:
             page += 1
             logger.info(f"KPI aggregation page {page} for agent {agent_id}")
@@ -81,6 +83,7 @@ async def aggregate_conversations(
 
                 # only successful calls
                 if getattr(conv, "call_successful", None) != "success":
+                    logger.error("Unsuccessfull call")
                     continue
 
                 # ---- Conversation Level Protection ----
@@ -105,9 +108,10 @@ async def aggregate_conversations(
                                 or getattr(meta, "created_at_unix_secs", None)
                             ),
                         )
+                        logger.info("Convo not present")
 
                     analysis = getattr(details, "analysis", None)
-                    _, lead_data = get_lead_data(analysis)
+                    lead_data = get_lead_data(analysis)
 
                     if lead_data:
                         def safe_str(val):
@@ -137,6 +141,8 @@ async def aggregate_conversations(
                                     status="Qualified" if email is not None or mobile is not None else "Unqualified"
                                 )
                                 db.add(new_lead)
+                            
+                            logger.info("Lead data saved")
 
 
                     # if conv_id not in processed_db_convs:
@@ -186,6 +192,7 @@ async def aggregate_conversations(
                     #                 db.add(new_lead)
 
                     await db.commit()
+                    logger.info("Convo saved successfully")
 
                 except Exception as e:
                     if getattr(e, "status_code", None) == 404:
