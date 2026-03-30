@@ -199,3 +199,126 @@ async def save_lead_details(request: Request, db: AsyncSession = Depends(get_db)
         await db.rollback()
         logger.exception(f"Unexpected error while saving lead, {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+# -------------------------------------------------------------------
+# Update Lead Status
+# -------------------------------------------------------------------
+
+@router.patch(
+    "/{conversation_id}/status",
+    summary="Update lead status",
+    description="Update the status of a lead using conversation_id",
+)
+async def update_lead_status(
+    conversation_id: str,
+    payload: dict,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        user = request.state.user
+        user_id = uuid.UUID(user["sub"])
+        
+        # Get user's agent_id to ensure ownership
+        result = await db.execute(
+            select(User.agent_id).where(User.user_id == user_id)
+        )
+        agent_id = result.scalar_one_or_none()
+
+        new_status = payload.get("status")
+        if not new_status:
+            raise HTTPException(status_code=400, detail="Status is required")
+
+        # Find the lead and verify ownership
+        result = await db.execute(
+            select(Lead).where(
+                Lead.conversation_id == conversation_id,
+                Lead.agent_id == agent_id
+            )
+        )
+        lead = result.scalar_one_or_none()
+
+        if not lead:
+            raise HTTPException(
+                status_code=404,
+                detail="Lead not found or access denied",
+            )
+
+        lead.status = new_status
+        await db.commit()
+
+        return {
+            "status": "success",
+            "message": f"Lead status updated to {new_status}",
+            "data": {
+                "conversation_id": conversation_id,
+                "status": new_status
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.exception(f"Error updating lead status - {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update lead status",
+        )
+
+# -------------------------------------------------------------------
+# Delete Lead
+# -------------------------------------------------------------------
+
+@router.delete(
+    "/{conversation_id}",
+    summary="Delete lead",
+    description="Delete a lead using conversation_id",
+)
+async def delete_lead(
+    conversation_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        user = request.state.user
+        user_id = uuid.UUID(user["sub"])
+        
+        # Get user's agent_id to ensure ownership
+        result = await db.execute(
+            select(User.agent_id).where(User.user_id == user_id)
+        )
+        agent_id = result.scalar_one_or_none()
+
+        # Find the lead and verify ownership
+        result = await db.execute(
+            select(Lead).where(
+                Lead.conversation_id == conversation_id,
+                Lead.agent_id == agent_id
+            )
+        )
+        lead = result.scalar_one_or_none()
+
+        if not lead:
+            raise HTTPException(
+                status_code=404,
+                detail="Lead not found or access denied",
+            )
+
+        await db.delete(lead)
+        await db.commit()
+
+        return {
+            "status": "success",
+            "message": "Lead deleted successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        await db.rollback()
+        logger.exception(f"Error deleting lead - {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete lead",
+        )
