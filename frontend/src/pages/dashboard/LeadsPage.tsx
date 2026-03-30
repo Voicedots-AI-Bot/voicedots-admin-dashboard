@@ -108,60 +108,61 @@ export function LeadsPage() {
         )}
 
         {/* ================= LEADS LIST ================= */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <Loader2 className="animate-spin text-gray-400" />
-            </div>
-          ) : filteredLeads.length === 0 ? (
-            <div className="text-center py-20 text-gray-500 text-sm">
-              No leads found
-            </div>
-          ) : (
-            filteredLeads.map((lead) => (
-              <div
-                key={lead.conversation_id}
-                onClick={() => {
-                  setSelectedLead(lead);
-                  setDrawerOpen(true);
-                }}
-                className="
-                  flex items-center justify-between
-                  bg-white border rounded-xl
-                  px-4 py-3
-                  cursor-pointer
-                  transition
-                  hover:bg-gray-50
-                "
-              >
-                {/* LEFT */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold shrink-0">
-                    {(lead.name ?? "?")
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">
-                      {lead.name ?? "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {lead.email ?? "—"}
-                    </p>
-                  </div>
+      
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="animate-spin text-gray-400" />
+          </div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="flex justify-center items-center py-20 text-gray-500 text-sm">
+            No leads found
+          </div>
+        ) : (
+          filteredLeads.map((lead) => (
+            <div
+              key={lead.conversation_id}
+              onClick={() => {
+                setSelectedLead(lead);
+                setDrawerOpen(true);
+              }}
+              className="
+                flex items-center
+                bg-white border rounded-xl
+                px-4 py-3
+                cursor-pointer transition hover:bg-gray-50
+                gap-4
+              "
+            >
+              {/* LEFT (flex-grow) */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold shrink-0">
+                  {(lead.name ?? "?")
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
                 </div>
 
-                {/* PHONE — DESKTOP */}
-                <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 w-[180px]">
-                  <Phone size={14} />
-                  {lead.mobile}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">
+                    {lead.name ?? "Unknown"}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {lead.email ?? "—"}
+                  </p>
                 </div>
+              </div>
 
-                {/* STATUS */}
+              {/* PHONE */}
+              <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 w-[180px] shrink-0 justify-start">
+                <Phone size={14} />
+                <span className="truncate">{lead.mobile ?? "—"}</span>
+              </div>
+
+              {/* STATUS (fixed width center aligned) */}
+              <div className="w-[130px] flex justify-center shrink-0">
                 <span
-                  className={`text-xs px-3 py-1 rounded-full font-medium shrink-0 ${
+                  className={`text-xs px-3 py-1 rounded-full font-medium ${
                     lead.status === "Qualified"
                       ? "bg-green-50 text-green-700"
                       : "bg-yellow-50 text-yellow-700"
@@ -169,15 +170,18 @@ export function LeadsPage() {
                 >
                   {lead.status}
                 </span>
+              </div>
 
-                {/* ACTION */}
-                <div className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-500 shrink-0">
+              {/* ACTION */}
+              <div className="w-10 flex justify-end shrink-0">
+                <div className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-500">
                   <MessageSquare size={16} />
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          ))
+        )}
+      </div>
       </div>
 
       {/* ================= DRAWER ================= */}

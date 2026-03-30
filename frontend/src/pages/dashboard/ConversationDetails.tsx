@@ -223,14 +223,19 @@ function LeadInfo({ lead }: any) {
 }
 
 /* HELPERS */
-
 function InfoRow({ icon, label, value }: any) {
   return (
-    <div className="flex gap-3 px-4 py-2 text-sm">
-      <div className="text-gray-400">{icon}</div>
-      <div>
-        <p className="text-[11px] text-gray-500">{label}</p>
-        <p className="truncate">{value}</p>
+    <div className="flex items-start gap-3 px-4 py-2  min-w-0">
+      <div className="text-gray-400 shrink-0">
+        {icon}
+      </div>
+
+      <div className="min-w-0 w-full">
+        <p className="text-xs text-gray-500">{label}</p>
+
+        <p className="text-sm font-medium break-words overflow-hidden">
+          {value}
+        </p>
       </div>
     </div>
   );

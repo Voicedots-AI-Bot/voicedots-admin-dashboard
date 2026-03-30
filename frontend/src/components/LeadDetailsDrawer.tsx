@@ -110,49 +110,50 @@ export function LeadDetailsDrawer({
       </div>
 
       {/* ================= SCROLLABLE CONTENT ================= */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 text-sm">
-        {tab === "details" && (
-          <>
-            <InfoRow label="Phone" value={lead.mobile} />
-            <InfoRow label="Email" value={lead.email} />
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 text-sm min-w-0">
+  {tab === "details" && (
+    <>
+      <InfoRow label="Phone" value={lead.mobile} />
+      <InfoRow label="Email" value={lead.email} />
 
-            <div className="flex justify-between items-start">
-              <p className="text-gray-500">Business Description</p>
-              <p className="font-medium leading-relaxed text-right max-w-xl">
-                {lead.business_description}
-              </p>
-            </div>
-          </>
-        )}
+      <div className="flex justify-between items-start gap-4 min-w-0">
+        <p className="text-gray-500 shrink-0">Business Description</p>
 
-        {tab === "notes" && (
-          <textarea
-            placeholder="Add internal notes..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full h-40 border rounded-lg p-3 text-sm resize-none"
-          />
-        )}
-
-        {tab === "activity" && (
-          <ul className="space-y-3 text-gray-600">
-            <li>• AI conversation completed</li>
-            <li>• Lead status: {lead.status}</li>
-          </ul>
-        )}
-
-        {tab === "next" && (
-          <div>
-            <label className="text-gray-500 block mb-1">
-              Schedule next call
-            </label>
-            <input
-              type="datetime-local"
-              className="border rounded-lg px-3 py-2 w-full text-sm"
-            />
-          </div>
-        )}
+        <p className="font-medium leading-relaxed text-right max-w-xl w-full min-w-0 break-words overflow-hidden">
+          {lead.business_description}
+        </p>
       </div>
+    </>
+  )}
+
+  {tab === "notes" && (
+    <textarea
+      placeholder="Add internal notes..."
+      value={notes}
+      onChange={(e) => setNotes(e.target.value)}
+      className="w-full h-40 border rounded-lg p-3 text-sm resize-none min-w-0"
+    />
+  )}
+
+  {tab === "activity" && (
+    <ul className="space-y-3 text-gray-600 min-w-0 break-words">
+      <li>• AI conversation completed</li>
+      <li>• Lead status: {lead.status}</li>
+    </ul>
+  )}
+
+  {tab === "next" && (
+    <div className="min-w-0">
+      <label className="text-gray-500 block mb-1">
+        Schedule next call
+      </label>
+      <input
+        type="datetime-local"
+        className="border rounded-lg px-3 py-2 w-full text-sm min-w-0"
+      />
+    </div>
+  )}
+</div>
 
       {/* ================= STICKY FOOTER ================= */}
       <div className="border-t px-5 py-4 bg-white">
