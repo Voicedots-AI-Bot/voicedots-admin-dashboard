@@ -50,6 +50,7 @@ export function ConversationDetails() {
       }
     }
     fetchConversationDetails();
+    
   }, [id]);
 
   const lead = data?.lead;
@@ -85,8 +86,11 @@ export function ConversationDetails() {
           </p>
         </div>
 
-        <ConversationAudioPlayer audioUrl={audioUrl} />
+        <ConversationAudioPlayer startTime={data?.start_time} endTime={data?.end_time} audioUrl={audioUrl} />
+        
       </div>
+      
+      
 
       {/* BODY */}
       <div className="flex-1 overflow-hidden">

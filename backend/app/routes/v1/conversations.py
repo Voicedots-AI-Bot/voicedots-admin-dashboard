@@ -89,7 +89,10 @@ async def get_conversation_details(
         return {
             "status": "success",
             "data": filtered_data,
-            "lead": lead
+            "lead": lead,
+            "start_time": data.metadata.start_time_unix_secs,
+            "end_time": data.metadata.start_time_unix_secs + data.metadata.call_duration_secs,
+            "duration": data.metadata.call_duration_secs,
         }
 
     except asyncio.TimeoutError:

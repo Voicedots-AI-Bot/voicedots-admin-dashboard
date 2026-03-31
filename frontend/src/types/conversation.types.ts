@@ -8,6 +8,9 @@ export interface ConversationsListSummary {
   duration: number;
   message_count: number;
   call_status: string;
+  start_time: number;
+  end_time: number;
+  time_format: string
 }
 
 export interface GetConversationsResponse {
@@ -49,6 +52,9 @@ export interface GetConversationDetailsResponse {
 export interface GetConversationDetailsResult {
   transcription: ConversationDetailsSummary[];
   lead: LeadDetails | null;
+  start_time: string;
+  end_time: string;
+  duration: number;
 }
 
 /* =============================

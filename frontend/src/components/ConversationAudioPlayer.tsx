@@ -5,15 +5,21 @@ import {
   RotateCcw,
   RotateCw,
   MoreHorizontal,
+  Clock,
 } from "lucide-react";
 import WaveSurfer from "wavesurfer.js";
+// import { start } from "repl";
 
 interface ConversationAudioPlayerProps {
   audioUrl: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 export function ConversationAudioPlayer({
   audioUrl,
+  startTime,
+  endTime,
 }: ConversationAudioPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const waveRef = useRef<WaveSurfer | null>(null);
@@ -76,16 +82,16 @@ export function ConversationAudioPlayer({
   const format = (t: number) =>
     `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 
-  return (
-    <div className="w-[420px]">
+    return (
+    <div className="w-full max-w-[420px]">
       <div
         ref={containerRef}
         className="mb-2 w-full"
         style={{ minHeight: 36 }}
       />
 
-      <div className="flex items-center justify-between text-xs">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={togglePlay}
             disabled={!ready}
@@ -93,6 +99,18 @@ export function ConversationAudioPlayer({
           >
             {playing ? <Pause size={14} /> : <Play size={14} />}
           </button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-700">
+              <Clock size={12} />
+              Start: <span className="font-medium">{startTime}</span>
+            </span>
+
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-700">
+              <Clock size={12} />
+              End: <span className="font-medium">{endTime}</span>
+            </span>
+          </div>
 
           <span className="font-medium">1.0x</span>
 
@@ -106,7 +124,7 @@ export function ConversationAudioPlayer({
         </div>
 
         <div className="flex items-center gap-3">
-          <span>
+          <span className="text-gray-500">
             {format(current)} / {format(duration)}
           </span>
           <MoreHorizontal size={14} className="opacity-60" />

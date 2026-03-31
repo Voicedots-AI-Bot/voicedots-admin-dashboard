@@ -47,20 +47,37 @@ const conversationsApi = {
      CONVERSATION DETAILS
   ===================================================== */
   getConversationDetails: async (
-    conversationId: string,
-    agentId?: string | null
-  ): Promise<GetConversationDetailsResult> => {
-    const version = getApiVersion(agentId);
-    const response =
-      await apiClient.get<GetConversationDetailsResponse>(
-        `/${version}/conversations/${conversationId}`
-      );
+  conversationId: string,
+  agentId?: string | null
+): Promise<GetConversationDetailsResult> => {
+  const version = getApiVersion(agentId);
 
-    return {
-      transcription: response.data.data,
-      lead: response.data.lead,
-    };
-  },
+  const response =
+    await apiClient.get<GetConversationDetailsResponse>(
+      `/${version}/conversations/${conversationId}`
+    );
+
+  const formatIST = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      // year: "numeric",
+      // month: "2-digit",
+      // day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  };
+
+  return {
+    transcription: response.data.data,
+    lead: response.data.lead,
+    start_time: formatIST(response.data.start_time),
+    end_time: formatIST(response.data.end_time),
+    duration: response.data.duration,
+  };
+},
 
   /* =====================================================
      CONVERSATION AUDIO
