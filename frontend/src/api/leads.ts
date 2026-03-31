@@ -2,7 +2,7 @@ import { apiClient } from "@/api/apiClient";
 
 /* ================= TYPES ================= */
 
-export type LeadStatus = "Qualified" | "Unqualified";
+export type LeadStatus = "Qualified" | "Unqualified" | "Follow Up";
 import type { Lead } from "@/types/lead.types";
 
 interface GetLeadsResponse {
@@ -15,7 +15,14 @@ interface GetLeadDetailsResponse {
   data: Lead;
 }
 
-
+interface UpdateLeadStatusResponse {
+  status: string;
+  message: string;
+  data: {
+    conversation_id: string;
+    status: string;
+  };
+}
 
 /* ================= API ================= */
 
@@ -44,6 +51,36 @@ const leadsApi = {
     } catch (error) {
       console.error(
         `Error fetching lead ${conversationId}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  updateLeadStatus: async (
+    conversationId: string,
+    status: LeadStatus
+  ): Promise<void> => {
+    try {
+      await apiClient.patch<UpdateLeadStatusResponse>(
+        `/v1/leads/${conversationId}/status`,
+        { status }
+      );
+    } catch (error) {
+      console.error(
+        `Error updating status for lead ${conversationId}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  deleteLead: async (conversationId: string): Promise<void> => {
+    try {
+      await apiClient.delete(`/v1/leads/${conversationId}`);
+    } catch (error) {
+      console.error(
+        `Error deleting lead ${conversationId}:`,
         error
       );
       throw error;

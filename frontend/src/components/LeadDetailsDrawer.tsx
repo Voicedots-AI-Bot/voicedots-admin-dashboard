@@ -4,8 +4,11 @@ import {
   Phone,
   Mail,
   MessageCircle,
+  Loader2,
+  Trash2,
 } from "lucide-react";
-import type { Lead } from "@/types/lead.types";
+import type { Lead, LeadStatus } from "@/types/lead.types";
+import leadsApi from "@/api/leads";
 
 const TOPBAR_HEIGHT = 64;
 
@@ -25,18 +28,48 @@ export function LeadDetailsDrawer({
   lead,
   isOpen,
   onClose,
+  onUpdateLead,
+  onDeleteLead,
 }: {
   lead: Lead | null;
   isOpen: boolean;
   onClose: () => void;
+  onUpdateLead: (lead: Lead) => void;
+  onDeleteLead: (conversationId: string) => void;
 }) {
   const [tab, setTab] = useState<
     "details" | "notes" | "activity" | "next"
   >("details");
 
   const [notes, setNotes] = useState("");
+  const [updating, setUpdating] = useState(false);
 
   if (!isOpen || !lead) return null;
+
+  async function handleStatusChange(newStatus: LeadStatus) {
+    if (!lead) return;
+    setUpdating(true);
+    try {
+      await leadsApi.updateLeadStatus(lead.conversation_id, newStatus);
+      onUpdateLead({ ...lead, status: newStatus });
+    } catch (error) {
+      console.error("Failed to update lead status:", error);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!lead) return;
+    if (!window.confirm("Are you sure you want to delete this lead?")) return;
+    
+    try {
+      await leadsApi.deleteLead(lead.conversation_id);
+      onDeleteLead(lead.conversation_id);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  }
 
   return (
     <div
@@ -63,28 +96,71 @@ export function LeadDetailsDrawer({
           </div>
         </div>
 
-        <button onClick={onClose} className="p-1">
-          <X size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={handleDelete}
+            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete Lead"
+          >
+            <Trash2 size={18} />
+          </button>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* ================= STICKY STATUS ================= */}
-      <div className="sticky top-[73px] z-10 bg-white border-b px-5 py-3">
+      <div className="sticky top-[73px] z-10 bg-white border-b px-5 py-3 relative">
         <select
           value={lead.status}
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          onChange={(e) => handleStatusChange(e.target.value as LeadStatus)}
+          disabled={updating}
+          className={`w-full border-2 rounded-lg px-3 py-2 text-sm outline-none transition-all duration-200 ${
+            lead.status === "Qualified"
+              ? "border-green-100 text-green-700 bg-green-50/10 focus:border-green-500"
+              : lead.status === "Unqualified"
+              ? "border-yellow-100 text-yellow-700 bg-yellow-50/10 focus:border-yellow-500"
+              : "border-blue-100 text-blue-700 bg-blue-50/10 focus:border-blue-500"
+          }`}
         >
           <option value="Qualified">Qualified</option>
           <option value="Unqualified">Unqualified</option>
           <option value="Follow Up">Follow Up</option>
         </select>
+        {updating && (
+          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+            <Loader2 size={16} className="animate-spin text-gray-400" />
+          </div>
+        )}
       </div>
 
       {/* ================= STICKY ACTIONS ================= */}
       <div className="sticky top-[130px] z-10 bg-white border-b px-5 py-4 mb-10 grid grid-cols-3 gap-3">
-        <Action icon={<Phone size={16} />} label="Call" disabled />
-        <Action icon={<Mail size={16} />} label="Email" />
-        <Action icon={<MessageCircle size={16} />} label="WhatsApp" />
+        <Action
+          icon={<Phone size={16} />}
+          label="Call"
+          disabled
+          title="Feature coming soon"
+          tooltipVariant="blue"
+        />
+        <Action
+          icon={<Mail size={16} />}
+          label="Email"
+          disabled
+          title="Feature coming soon"
+          tooltipVariant="indigo"
+        />
+        <Action
+          icon={<MessageCircle size={16} />}
+          label="WhatsApp"
+          disabled={!lead.mobile}
+          onClick={() =>
+            lead.mobile &&
+            window.open(`https://wa.me/${lead.mobile.replace(/\D/g, "")}`, "_blank")
+          }
+          tooltipVariant="green"
+        />
       </div>
 
       {/* ================= STICKY TABS ================= */}
@@ -136,9 +212,30 @@ export function LeadDetailsDrawer({
   )}
 
   {tab === "activity" && (
-    <ul className="space-y-3 text-gray-600 min-w-0 break-words">
-      <li>• AI conversation completed</li>
-      <li>• Lead status: {lead.status}</li>
+    <ul className="space-y-4 text-gray-600 min-w-0 break-words">
+      <li className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+        <span>AI conversation completed</span>
+      </li>
+      <li className="flex items-center gap-2">
+        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+          lead.status === "Qualified"
+            ? "bg-green-500"
+            : lead.status === "Unqualified"
+            ? "bg-yellow-500"
+            : "bg-blue-500"
+        }`} />
+        <span>Lead status: </span>
+        <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+          lead.status === "Qualified"
+            ? "bg-green-50 text-green-700 border border-green-100"
+            : lead.status === "Unqualified"
+            ? "bg-yellow-50 text-yellow-700 border border-yellow-100"
+            : "bg-blue-50 text-blue-700 border border-blue-100"
+        }`}>
+          {lead.status}
+        </span>
+      </li>
     </ul>
   )}
 
@@ -160,12 +257,21 @@ export function LeadDetailsDrawer({
         <p className="text-xs text-gray-500 mb-2">Next Suggested Action</p>
 
         <div className="flex gap-3">
-          <button className="flex-1 border rounded-lg py-2 text-sm">
-            Schedule Call
-          </button>
-          <button className="flex-1 border rounded-lg py-2 text-sm">
-            Send WhatsApp
-          </button>
+          <Action
+            label="Schedule Call"
+            disabled
+            title="Feature coming soon"
+            tooltipVariant="blue"
+          />
+          <Action
+            label="Send WhatsApp"
+            disabled={!lead.mobile}
+            onClick={() =>
+              lead.mobile &&
+              window.open(`https://wa.me/${lead.mobile.replace(/\D/g, "")}`, "_blank")
+            }
+            tooltipVariant="green"
+          />
         </div>
 
         <div className="mt-3 text-xs text-gray-500">
@@ -179,27 +285,70 @@ export function LeadDetailsDrawer({
 
 /* ================= SUB COMPONENTS ================= */
 
+type TooltipVariant = "blue" | "indigo" | "green" | "gray";
+
 function Action({
   icon,
   label,
   disabled,
+  title,
+  onClick,
+  tooltipVariant = "gray",
 }: {
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   label: string;
   disabled?: boolean;
+  title?: string;
+  onClick?: () => void;
+  tooltipVariant?: TooltipVariant;
 }) {
+  const variantStyles = {
+    blue: "bg-blue-600 border-blue-600 text-blue-50",
+    indigo: "bg-indigo-600 border-indigo-600 text-indigo-50",
+    green: "bg-emerald-600 border-emerald-600 text-emerald-50",
+    gray: "bg-gray-900 border-gray-900 text-gray-50",
+  };
+
+  const arrowStyles = {
+    blue: "border-t-blue-600",
+    indigo: "border-t-indigo-600",
+    green: "border-t-emerald-600",
+    gray: "border-t-gray-900",
+  };
+
   return (
-    <button
-      disabled={disabled}
-      className={`border rounded-xl py-3 flex flex-col items-center gap-1 text-sm ${
-        disabled
-          ? "bg-gray-100 text-gray-400"
-          : "hover:bg-gray-50"
-      }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
+    <div className="relative group w-full">
+      <button
+        disabled={disabled}
+        onClick={onClick}
+        className={`border rounded-xl py-3 flex flex-col items-center gap-1 text-sm w-full transition-all duration-100 ${
+          disabled
+            ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+            : "hover:bg-gray-100 bg-white"
+        }`}
+      >
+        {icon}
+        <span className="font-medium whitespace-nowrap px-2 text-center">{label}</span>
+      </button>
+
+      {title && (
+        <div className={`
+          absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2
+          text-white text-[11px] px-2.5 py-1.5 rounded-md
+          whitespace-nowrap opacity-0 group-hover:opacity-100
+          transition-all duration-100 pointer-events-none z-[60]
+          shadow-xl translate-y-1 group-hover:translate-y-0
+          ${variantStyles[tooltipVariant]}
+        `}>
+          {title}
+          <div className={`
+            absolute top-full left-1/2 -translate-x-1/2
+            border-[5px] border-transparent
+            ${arrowStyles[tooltipVariant]}
+          `} />
+        </div>
+      )}
+    </div>
   );
 }
 

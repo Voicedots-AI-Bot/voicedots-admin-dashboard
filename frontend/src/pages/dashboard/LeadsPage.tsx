@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   Phone,
-  MessageSquare,
   Search,
   Loader2,
+  Trash2,
 } from "lucide-react";
 import leadsApi from "@/api/leads";
 import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
@@ -27,13 +27,50 @@ export function LeadsPage() {
   useEffect(() => {
     async function fetchLeads() {
       setLoading(true);
-      const data = await leadsApi.getLeads();
-      setLeads(data);
-      setLoading(false);
+      try {
+        const data = await leadsApi.getLeads();
+        setLeads(data);
+      } catch (err) {
+        console.error("Failed to fetch leads", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchLeads();
   }, []);
+
+  /* ================= HANDLERS ================= */
+
+  async function handleDeleteLead(
+    e: React.MouseEvent,
+    conversationId: string
+  ) {
+    e.stopPropagation();
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this lead?"
+      )
+    )
+      return;
+
+    try {
+      await leadsApi.deleteLead(conversationId);
+      setLeads((prev) =>
+        prev.filter(
+          (l) => l.conversation_id !== conversationId
+        )
+      );
+      if (
+        selectedLead?.conversation_id === conversationId
+      ) {
+        setDrawerOpen(false);
+        setSelectedLead(null);
+      }
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  }
 
   /* ================= DERIVED DATA ================= */
 
@@ -165,7 +202,9 @@ export function LeadsPage() {
                   className={`text-xs px-3 py-1 rounded-full font-medium ${
                     lead.status === "Qualified"
                       ? "bg-green-50 text-green-700"
-                      : "bg-yellow-50 text-yellow-700"
+                      : lead.status === "Unqualified"
+                      ? "bg-yellow-50 text-yellow-700"
+                      : "bg-blue-50 text-blue-700"
                   }`}
                 >
                   {lead.status}
@@ -173,10 +212,15 @@ export function LeadsPage() {
               </div>
 
               {/* ACTION */}
-              <div className="w-10 flex justify-end shrink-0">
-                <div className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-500">
-                  <MessageSquare size={16} />
-                </div>
+              <div className="w-10 flex justify-end shrink-0 gap-2">
+                <button
+                  onClick={(e) =>
+                    handleDeleteLead(e, lead.conversation_id)
+                  }
+                  className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all duration-200"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           ))
@@ -189,6 +233,21 @@ export function LeadsPage() {
         lead={selectedLead}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        onUpdateLead={(updatedLead) => {
+          setLeads((prevLeads) =>
+            prevLeads.map((l) =>
+              l.conversation_id === updatedLead.conversation_id ? updatedLead : l
+            )
+          );
+          setSelectedLead(updatedLead);
+        }}
+        onDeleteLead={(conversationId) => {
+          setLeads((prev) =>
+            prev.filter((l) => l.conversation_id !== conversationId)
+          );
+          setDrawerOpen(false);
+          setSelectedLead(null);
+        }}
       />
     </>
   );
