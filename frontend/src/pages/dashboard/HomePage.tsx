@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Calendar,
+  Clock,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -25,6 +26,7 @@ import { AvgCallDurationChart } from "@/components/charts/AvgCallDurationChart";
 type Preset = "7d" | "15d" | "30d" | "all" | "custom";
 
 const formatUsd = (v = 0) => `$${v.toFixed(2)}`;
+const formatHours = (secs = 0) => `${(secs / 3600).toFixed(1)}h`;
 
 const getRangeFromPreset = (preset: Preset) => {
   const end = new Date();
@@ -132,11 +134,13 @@ export function HomePage() {
     const totalConversations = data.reduce((sum, p) => sum + p.conversations, 0);
     const totalCost = data.reduce((sum, p) => sum + p.cost_usd, 0);
     const totalMessages = data.reduce((sum, p) => sum + p.messages, 0);
+    const totalDuration = data.reduce((sum, p) => sum + p.total_call_duration_secs, 0);
     const avgCost = totalConversations > 0 ? totalCost / totalConversations : 0;
     return {
       conversations: totalConversations,
       cost: totalCost,
       messages: totalMessages,
+      totalDuration: totalDuration,
       avgCost: avgCost
     };
   };
@@ -181,6 +185,14 @@ export function HomePage() {
         : (preset === "all" ? kpis?.total_messages ?? 0 : currentMetrics.messages).toLocaleString(),
       icon: Activity,
       trendObj: getTrendObj("messages"),
+    },
+    {
+      label: "Total Duration",
+      value: loading
+        ? "—"
+        : formatHours(preset === "all" ? kpis?.total_call_duration_secs ?? 0 : currentMetrics.totalDuration),
+      icon: Clock,
+      trendObj: getTrendObj("totalDuration"),
     },
     {
       label: "Avg Cost / Conv",
@@ -247,7 +259,7 @@ export function HomePage() {
       </div>
 
       {/* ================= KPI CARDS ================= */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
           <motion.div
             key={stat.label}

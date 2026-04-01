@@ -166,6 +166,7 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
                 "conversations": row.conversations,
                 "messages": row.messages or 0,
                 "cost_usd": row.cost_usd or 0,
+                "total_call_duration_secs": row.total_call_duration_secs or 0,
                 "avg_call_duration_secs": int(avg_call_duration),
             })
 

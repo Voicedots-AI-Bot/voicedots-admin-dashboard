@@ -84,6 +84,7 @@ export interface KpiTimeseriesPoint {
   conversations: number;
   messages: number;
   cost_usd: number;
+  total_call_duration_secs: number;
   avg_call_duration_secs: number;
 }
 
