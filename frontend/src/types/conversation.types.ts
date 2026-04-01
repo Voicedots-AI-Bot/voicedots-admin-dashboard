@@ -47,6 +47,9 @@ export interface GetConversationDetailsResponse {
   status: string;
   data: ConversationDetailsSummary[];
   lead: LeadDetails | null;
+  start_time: number;
+  end_time: number;
+  duration: number;
 }
 
 export interface GetConversationDetailsResult {

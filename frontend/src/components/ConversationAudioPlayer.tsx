@@ -12,8 +12,8 @@ import WaveSurfer from "wavesurfer.js";
 
 interface ConversationAudioPlayerProps {
   audioUrl: string;
-  startTime?: number;
-  endTime?: number;
+  startTime?: string;
+  endTime?: string;
 }
 
 export function ConversationAudioPlayer({
