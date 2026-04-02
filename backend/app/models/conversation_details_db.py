@@ -12,7 +12,7 @@ class ConversationDetails(Base):
     date = Column(String, index=True)
     cost_credits = Column(Integer, index=True)
     cost_usd = Column(Numeric(12,6), index=True)
-    call_duration_secs = Column(Integer, index=True)
+    call_duration_hours = Column(Numeric(12,6), index=True)
     messages_count = Column(Integer, index=True)
     
     user = relationship("User", back_populates="conversation_details")

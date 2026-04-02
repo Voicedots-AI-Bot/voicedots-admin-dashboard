@@ -20,7 +20,7 @@ async def add_conversation_kpi(
     llm_charge: int,
     call_charge: int,
     messages_count: int,
-    call_duration_secs: int = 0,
+    call_duration_hours: float = 0,
     start_time_unix_secs: int | None = None,
 ):
     try:
@@ -52,7 +52,7 @@ async def add_conversation_kpi(
             date=dt.strftime("%d %b %Y"),
             cost_credits=credits_used,
             cost_usd=cost_usd,
-            call_duration_secs=call_duration_secs,
+            call_duration_hours=call_duration_hours,
             messages_count=messages_count,
         )
 
@@ -72,7 +72,7 @@ async def add_conversation_kpi(
                 total_messages=0,
                 total_credits=0,
                 total_cost_usd=0,
-                total_call_duration_secs=0,
+                total_call_duration_hours=0,
             )
             db.add(usage)
 
@@ -80,7 +80,7 @@ async def add_conversation_kpi(
         usage.total_messages += messages_count
         usage.total_credits += credits_used
         usage.total_cost_usd += cost_usd
-        usage.total_call_duration_secs += call_duration_secs
+        usage.total_call_duration_hours += call_duration_hours
 
         await db.commit()
 
@@ -110,7 +110,8 @@ async def get_kpis(user_id: UUID, db: AsyncSession):
         total_conversations = usage.total_conversations or 0
         total_messages = usage.total_messages or 0
         total_cost_usd = usage.total_cost_usd or 0
-        total_call_duration_secs = usage.total_call_duration_secs or 0
+        total_call_duration_hours = usage.total_call_duration_hours or 0
+        total_call_duration_secs = int(total_call_duration_hours * 3600)
 
         avg_cost = (
             total_cost_usd / total_conversations
@@ -144,7 +145,7 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
                 func.count(ConversationDetails.conversation_id).label("conversations"),
                 func.sum(ConversationDetails.messages_count).label("messages"),
                 func.sum(ConversationDetails.cost_usd).label("cost_usd"),
-                func.sum(ConversationDetails.call_duration_secs).label("total_call_duration_secs"),
+                func.sum(ConversationDetails.call_duration_hours).label("total_call_duration_hours"),
             )
             .where(ConversationDetails.user_id == user_id)
             .group_by(ConversationDetails.date)
@@ -156,8 +157,9 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
         timeseries = []
 
         for row in rows:
+            total_secs = int((row.total_call_duration_hours or 0) * 3600)
             avg_call_duration = (
-                row.total_call_duration_secs / row.conversations
+                total_secs / row.conversations
                 if row.conversations and row.conversations > 0 else 0
             )
 
@@ -166,7 +168,7 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
                 "conversations": row.conversations,
                 "messages": row.messages or 0,
                 "cost_usd": row.cost_usd or 0,
-                "total_call_duration_secs": row.total_call_duration_secs or 0,
+                "total_call_duration_secs": total_secs,
                 "avg_call_duration_secs": int(avg_call_duration),
             })
 

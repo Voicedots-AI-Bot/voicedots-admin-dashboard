@@ -101,7 +101,7 @@ async def aggregate_conversations(
                             llm_charge=getattr(charging_info, "llm_charge", 0) if charging_info else 0,
                             call_charge=getattr(charging_info, "call_charge", 0) if charging_info else 0,
                             messages_count=messages_count,
-                            call_duration_secs=getattr(meta, "call_duration_secs", 0) or 0,
+                            call_duration_hours=((getattr(meta, "call_duration_secs", 0) or 0) / 3600.0),
                             start_time_unix_secs=(
                                 getattr(meta, "start_time_unix_secs", None)
                                 or getattr(meta, "accepted_time_unix_secs", None)

@@ -11,6 +11,6 @@ class Usage(Base):
     total_messages = Column(Integer)
     total_credits = Column(Integer)
     total_cost_usd = Column(Numeric(12,6))
-    total_call_duration_secs = Column(Integer)
+    total_call_duration_hours = Column(Numeric(12,6))
     
     user = relationship("User", back_populates="usage")
