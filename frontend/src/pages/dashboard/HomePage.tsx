@@ -4,22 +4,22 @@ import {
   DollarSign,
   Users,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
   Calendar,
   Clock,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { kpiAPI } from "@/api/kpi";
-import type {
-  KpiSummary,
-  KpiTimeseriesPoint,
-} from "@/types/conversation.types";
+import type { KpiTimeseriesPoint } from "@/types/conversation.types";
 
 import { CostOverTimeChart } from "@/components/charts/CostOverTimeChart";
 import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
 import { AvgCallDurationChart } from "@/components/charts/AvgCallDurationChart";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 
 /* ================= TYPES & HELPERS ================= */
 
@@ -61,7 +61,6 @@ const item = {
 /* ================= HOME PAGE ================= */
 
 export function HomePage() {
-  const [kpis, setKpis] = useState<KpiSummary | null>(null);
   const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,7 +74,6 @@ export function HomePage() {
     kpiAPI
       .getKpis()
       .then((res) => {
-        setKpis(res.summary);
         setTimeseries(res.timeseries);
       })
       .catch(console.error)
@@ -165,96 +163,156 @@ export function HomePage() {
   /* ===== KPI CARDS ===== */
   const stats = [
     {
-      label: "Total Conversations",
-      value: loading ? "—" : (preset === "all" ? kpis?.total_conversations ?? 0 : currentMetrics.conversations),
+      label: "TOTAL CONVERSATIONS",
+      value: loading ? "—" : currentMetrics.conversations,
       icon: MessageSquare,
       trendObj: getTrendObj("conversations"),
+      color: "#000000",
+      bgClass: "bg-white",
+      textClass: "text-slate-900",
+      ringClass: "ring-slate-200",
+      dataKey: "conversations",
     },
     {
-      label: "Total Cost",
-      value: loading
-        ? "—"
-        : formatUsd(preset === "all" ? kpis?.total_cost_usd ?? 0 : currentMetrics.cost),
+      label: "TOTAL COST",
+      value: loading ? "—" : formatUsd(currentMetrics.cost),
       icon: DollarSign,
       trendObj: getTrendObj("cost"),
+      color: "#000000",
+      bgClass: "bg-white",
+      textClass: "text-slate-900",
+      ringClass: "ring-slate-200",
+      dataKey: "cost_usd",
     },
     {
-      label: "Total Messages",
-      value: loading
-        ? "—"
-        : (preset === "all" ? kpis?.total_messages ?? 0 : currentMetrics.messages).toLocaleString(),
+      label: "TOTAL MESSAGES",
+      value: loading ? "—" : currentMetrics.messages.toLocaleString(),
       icon: Activity,
       trendObj: getTrendObj("messages"),
+      color: "#000000",
+      bgClass: "bg-white",
+      textClass: "text-slate-900",
+      ringClass: "ring-slate-200",
+      dataKey: "messages",
     },
     {
-      label: "Total Duration",
-      value: loading
-        ? "—"
-        : formatHours(preset === "all" ? kpis?.total_call_duration_secs ?? 0 : currentMetrics.totalDuration),
+      label: "TOTAL DURATION",
+      value: loading ? "—" : formatHours(currentMetrics.totalDuration),
       icon: Clock,
       trendObj: getTrendObj("totalDuration"),
+      color: "#000000",
+      bgClass: "bg-white",
+      textClass: "text-slate-900",
+      ringClass: "ring-slate-200",
+      dataKey: "total_call_duration_secs",
     },
     {
-      label: "Avg Cost / Conv",
-      value: loading
-        ? "—"
-        : formatUsd(preset === "all" ? kpis?.avg_cost_per_conversation_usd ?? 0 : currentMetrics.avgCost),
+      label: "AVG COST / CONV",
+      value: loading ? "—" : formatUsd(currentMetrics.avgCost),
       icon: Users,
       trendObj: getTrendObj("avgCost"),
+      color: "#000000",
+      bgClass: "bg-white",
+      textClass: "text-slate-900",
+      ringClass: "ring-slate-200",
+      dataKey: "avg_cost", // specialized calculation in map
     },
   ];
+
+  const MiniSparkline = ({ data, color }: { data: any[], color: string }) => (
+    <div className="h-10 w-24">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data}>
+          <defs>
+            <linearGradient id={`gradient-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={color} stopOpacity={0.15}/>
+              <stop offset="95%" stopColor={color} stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={1.5}
+            fill={`url(#gradient-${color.replace('#','')})`}
+            fillOpacity={1}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }, []);
 
   return (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-10"
+      className="space-y-8"
     >
       {/* ================= HEADER & CONTROLS ================= */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Dashboard Overview
-          </h1>
-          <p className="text-slate-500">
-            Welcome back! Here’s your activity summary.
+          <p className="text-sm font-semibold tracking-tight text-slate-400">
+            {greeting}
+          </p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+              Dashboard <span className="text-blue-600">Overview</span>
+            </h1>
+          </div>
+          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+            Real-time analytics and performance metrics.
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 ring-1 ring-emerald-200/50">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
+              LIVE
+            </span>
           </p>
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-          {(["all", "7d", "15d", "30d"] as Preset[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => handlePresetChange(p)}
-              className={`rounded-md px-3 py-1 text-xs font-medium ${preset === p
-                ? "bg-indigo-600 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-            >
-              {p === "30d" ? "1M" : p === "all" ? "ALL" : p.toUpperCase()}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 rounded-2xl bg-slate-100/50 p-1.5 ring-1 ring-slate-200/60 backdrop-blur-sm">
+          <div className="flex items-center">
+            {(["all", "7d", "15d", "30d"] as Preset[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => handlePresetChange(p)}
+                className={`rounded-xl px-4 py-1.5 text-[11px] font-bold tracking-wide transition-all duration-200 ${preset === p
+                  ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                  : "text-slate-500 hover:bg-white hover:text-slate-900"
+                  }`}
+              >
+                {p === "30d" ? "1M" : p === "all" ? "ALL" : p.toUpperCase()}
+              </button>
+            ))}
+          </div>
 
-          <Calendar size={14} className="text-slate-500" />
+          <div className="h-4 w-px bg-slate-300 mx-1"></div>
 
-          <input
-            type="date"
-            value={from}
-            onChange={(e) =>
-              handleDateChange(e.target.value, to)
-            }
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs"
-          />
-
-          <input
-            type="date"
-            value={to}
-            onChange={(e) =>
-              handleDateChange(from, e.target.value)
-            }
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs"
-          />
+          <div className="flex items-center gap-2 px-2">
+            <div className="flex items-center gap-1.5">
+              <Calendar size={14} className="text-slate-400" />
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => handleDateChange(e.target.value, to)}
+                className="bg-transparent text-[11px] font-semibold text-slate-600 outline-none focus:ring-0"
+              />
+            </div>
+            <span className="text-slate-300 text-[10px]">→</span>
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => handleDateChange(from, e.target.value)}
+              className="bg-transparent text-[11px] font-semibold text-slate-600 outline-none focus:ring-0"
+            />
+          </div>
         </div>
       </div>
 
@@ -264,32 +322,33 @@ export function HomePage() {
           <motion.div
             key={stat.label}
             variants={item}
-            className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+            className="group relative overflow-hidden rounded-3xl bg-white/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/50 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300/60 cursor-pointer"
           >
             <div className="flex items-start justify-between">
-              <stat.icon className="h-6 w-6 text-slate-700" />
-              {stat.trendObj && (
-                <div
-                  className={`flex items-center gap-1 text-xs font-medium ${stat.trendObj.up ? "text-green-600" : "text-red-600"
-                    }`}
-                >
-                  {stat.trendObj.text}
-                  {stat.trendObj.up ? (
-                    <ArrowUpRight size={14} />
-                  ) : (
-                    <ArrowDownRight size={14} />
-                  )}
-                </div>
-              )}
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.bgClass} ${stat.textClass} ring-1 ${stat.ringClass}`}>
+                <stat.icon className="h-5 w-5" />
+              </div>
             </div>
 
-            <div className="mt-4">
-              <p className="text-sm text-slate-500">
+            <div className="mt-6">
+              <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                 {stat.label}
               </p>
-              <p className="mt-1 text-2xl font-bold text-slate-900">
-                {stat.value}
-              </p>
+              <div className="mt-1 flex items-end justify-between gap-2">
+                <p className="text-2xl font-bold tracking-tight text-slate-900">
+                  {stat.value}
+                </p>
+                <div className="pb-1">
+                  <MiniSparkline
+                    data={filteredData.map(p => ({ 
+                      value: stat.label.includes("AVG COST") 
+                        ? (p.conversations > 0 ? (p.cost_usd / p.conversations) : 0) 
+                        : p[stat.dataKey as keyof KpiTimeseriesPoint] 
+                    }))}
+                    color="#111827"
+                  />
+                </div>
+              </div>
             </div>
           </motion.div>
         ))}

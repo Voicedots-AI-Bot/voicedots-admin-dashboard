@@ -57,7 +57,7 @@ async def add_conversation_kpi(
         )
 
         db.add(conversation)
-        await db.commit()
+        # await db.commit()
         
         # Fetch usage
         usage_result = await db.execute(
@@ -82,7 +82,7 @@ async def add_conversation_kpi(
         usage.total_cost_usd += cost_usd
         usage.total_call_duration_secs += call_duration_secs
 
-        # await db.commit()
+        await db.commit()
 
     except SQLAlchemyError as e:
         await db.rollback()
