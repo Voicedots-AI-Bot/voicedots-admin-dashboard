@@ -9,7 +9,7 @@ const DashboardLayout = () => {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* SIDEBAR */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -19,19 +19,20 @@ const DashboardLayout = () => {
 
       {/* MAIN COLUMN */}
       <div className="flex flex-col flex-1 w-full">
-        {/* TOP BAR (fixed height) */}
+        {/* TOP BAR (sticky at top) */}
         <TopBar
           onMenuClick={() => setIsSidebarOpen(true)}
           onToggleSidebar={() => setIsCollapsed(!isCollapsed)}
+          isSidebarCollapsed={isCollapsed}
         />
 
         {/* 
-          ✅ THIS IS THE SCROLL CONTAINER
-          - overflow-y-auto ENABLED
-          - flex-1 to take remaining height
+          ✅ PRIMARY CONTENT AREA
+          - No height restriction here
+          - No overflow-y-auto here (let the body/root layout scroll)
         */}
         <main
-          className={`flex-1 overflow-y-auto ${
+          className={`flex-1 ${
             location.pathname.startsWith("/dashboard/conversations/")
               ? "p-0"
               : "p-4 md:p-8"

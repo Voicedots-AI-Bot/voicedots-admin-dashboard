@@ -80,7 +80,7 @@ export function TicketsPage() {
         <>
             {/* ================= MAIN CONTENT ================= */}
             <div
-                className="flex flex-col h-full overflow-hidden gap-6 transition-all duration-300"
+                className="flex flex-col gap-6 transition-all duration-300"
                 style={{
                     marginRight: drawerOpen
                         ? `${DRAWER_WIDTH}px`
@@ -144,7 +144,7 @@ export function TicketsPage() {
                 )}
 
                 {/* ================= TICKETS LIST ================= */}
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 pb-4">
+                <div className="space-y-2 pr-1 pb-4">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <Loader2 className="animate-spin text-gray-400 w-8 h-8" />

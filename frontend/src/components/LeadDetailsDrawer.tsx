@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Lead, LeadStatus } from "@/types/lead.types";
 import leadsApi from "@/api/leads";
+import { useAuth } from "@/context/AuthContext";
 
 const TOPBAR_HEIGHT = 64;
 
@@ -40,6 +41,7 @@ export function LeadDetailsDrawer({
   const [tab, setTab] = useState<
     "details" | "notes" | "activity" | "next"
   >("details");
+  const { user } = useAuth();
 
   const [notes, setNotes] = useState("");
   const [updating, setUpdating] = useState(false);
@@ -50,7 +52,7 @@ export function LeadDetailsDrawer({
     if (!lead) return;
     setUpdating(true);
     try {
-      await leadsApi.updateLeadStatus(lead.conversation_id, newStatus);
+      await leadsApi.updateLeadStatus(lead.conversation_id, newStatus, user?.agent_id);
       onUpdateLead({ ...lead, status: newStatus });
     } catch (error) {
       console.error("Failed to update lead status:", error);
@@ -64,7 +66,7 @@ export function LeadDetailsDrawer({
     if (!window.confirm("Are you sure you want to delete this lead?")) return;
     
     try {
-      await leadsApi.deleteLead(lead.conversation_id);
+      await leadsApi.deleteLead(lead.conversation_id, user?.agent_id);
       onDeleteLead(lead.conversation_id);
     } catch (error) {
       console.error("Delete failed:", error);

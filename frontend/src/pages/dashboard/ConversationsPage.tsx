@@ -9,8 +9,10 @@ import { UI } from "@/ui/colors";
 import { ConversationCard } from "@/components/ConversationCard";
 import conversationsApi from "@/api/conversations";
 import type { ConversationsListSummary } from "@/types/conversation.types";
+import { useAuth } from "@/context/AuthContext";
 
 export function ConversationsPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] =
     useState<ConversationsListSummary[]>([]);
@@ -39,7 +41,7 @@ export function ConversationsPage() {
       try {
         setIsLoading(true);
         const data = await conversationsApi.getConversations(
-          null,
+          user?.agent_id,
           cursor
         );
         setConversations(data.conversations);
@@ -48,7 +50,7 @@ export function ConversationsPage() {
         setIsLoading(false);
       }
     },
-    []
+    [user?.agent_id]
   );
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export function ConversationsPage() {
   }, [searchQuery, conversations]);
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col gap-4 md:gap-6">
+    <div className="flex flex-col gap-4 md:gap-6">
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
@@ -150,7 +152,7 @@ export function ConversationsPage() {
       </div>
 
       {/* LIST */}
-      <div className="flex flex-col gap-3 overflow-y-auto pr-1 md:pr-2">
+      <div className="flex flex-col gap-3 pr-1 md:pr-2">
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-gray-400" />

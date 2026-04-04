@@ -61,7 +61,7 @@ export function Sidebar({
         bg-white border-e border-gray-200 dark:bg-slate-900 dark:border-slate-700
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         ${isCollapsed ? "md:w-20" : "md:w-64"}
-        md:translate-x-0 md:static md:block`}
+        md:translate-x-0 md:sticky md:top-0 md:h-screen md:block`}
       >
         <div className="flex flex-col h-full py-6">
           {/* Logo */}

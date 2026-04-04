@@ -7,4 +7,5 @@ export interface Lead {
   mobile: string;
   business_description: string;
   status: LeadStatus;
+  created_at?: string;
 }

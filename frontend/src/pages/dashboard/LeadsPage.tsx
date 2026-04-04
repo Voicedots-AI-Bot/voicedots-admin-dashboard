@@ -11,9 +11,12 @@ import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
 import { LeadsKpi } from "@/components/leadsKpi";
 import type { Lead } from "@/types/lead.types";
 
+import { useAuth } from "@/context/AuthContext";
+
 const DRAWER_WIDTH = 420;
 
 export function LeadsPage() {
+  const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,7 +32,7 @@ export function LeadsPage() {
     async function fetchLeads() {
       setLoading(true);
       try {
-        const data = await leadsApi.getLeads();
+        const data = await leadsApi.getLeads(user?.agent_id);
         setLeads(data);
       } catch (err) {
         console.error("Failed to fetch leads", err);
@@ -56,7 +59,7 @@ export function LeadsPage() {
       return;
 
     try {
-      await leadsApi.deleteLead(conversationId);
+      await leadsApi.deleteLead(conversationId, user?.agent_id);
       setLeads((prev) =>
         prev.filter(
           (l) => l.conversation_id !== conversationId
@@ -98,15 +101,38 @@ export function LeadsPage() {
       return `"${escaped}"`;
     };
 
-    const headers = ["Name", "Phone", "Email", "Description"];
+    const formatDateTime = (isoStr: string | undefined | null) => {
+      if (!isoStr) return '""';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '""';
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const day = pad(d.getDate());
+      const month = pad(d.getMonth() + 1);
+      const year = d.getFullYear();
+      const hours = pad(d.getHours());
+      const mins = pad(d.getMinutes());
+      const secs = pad(d.getSeconds());
+      return `"${day}/${month}/${year}, ${hours}:${mins}:${secs}"`;
+    };
+
+    // Sort leads by date — newest first
+    const sortedLeads = [...leads].sort((a, b) => {
+      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return db - da;
+    });
+
+    const headers = ["Name", "Phone", "Email", "Description", "Status", "Date"];
     const csvContent = [
       headers.join(","),
-      ...leads.map((lead) => {
+      ...sortedLeads.map((lead) => {
         const name = escapeCsv(lead.name);
         const phone = escapeCsv((lead as any).mobile || lead.mobile);
         const email = escapeCsv(lead.email);
         const desc = escapeCsv(lead.business_description);
-        return [name, phone, email, desc].join(",");
+        const status = escapeCsv(lead.status);
+        const dateTime = formatDateTime(lead.created_at);
+        return [name, phone, email, desc, status, dateTime].join(",");
       })
     ].join("\n");
 
@@ -126,7 +152,7 @@ export function LeadsPage() {
     <>
       {/* ================= MAIN CONTENT ================= */}
       <div
-        className="flex flex-col h-full overflow-hidden gap-6 transition-all duration-300"
+        className="flex flex-col gap-6 transition-all duration-300"
         style={{
           marginRight: drawerOpen
             ? `${DRAWER_WIDTH}px`
@@ -198,7 +224,7 @@ export function LeadsPage() {
 
         {/* ================= LEADS LIST ================= */}
 
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        <div className="space-y-2 pr-1">
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <Loader2 className="animate-spin text-gray-400" />

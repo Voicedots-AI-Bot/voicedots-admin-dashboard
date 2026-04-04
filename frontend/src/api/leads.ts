@@ -26,11 +26,19 @@ interface UpdateLeadStatusResponse {
 
 /* ================= API ================= */
 
+const getApiVersion = (agentId?: string | null): string => {
+  if (agentId && agentId.startsWith("voicedots_agent_")) {
+    return "v2";
+  }
+  return "v1";
+};
+
 const leadsApi = {
-  getLeads: async (): Promise<Lead[]> => {
+  getLeads: async (agentId?: string | null): Promise<Lead[]> => {
     try {
+      const version = getApiVersion(agentId);
       const response = await apiClient.get<GetLeadsResponse>(
-        "/v1/leads/"
+        `/${version}/leads/`
       );
       return response.data.data;
     } catch (error) {
@@ -40,12 +48,14 @@ const leadsApi = {
   },
 
   getLeadDetails: async (
-    conversationId: string
+    conversationId: string,
+    agentId?: string | null
   ): Promise<Lead> => {
     try {
+      const version = getApiVersion(agentId);
       const response =
         await apiClient.get<GetLeadDetailsResponse>(
-          `/v1/leads/${conversationId}`
+          `/${version}/leads/${conversationId}`
         );
       return response.data.data;
     } catch (error) {
@@ -59,11 +69,13 @@ const leadsApi = {
 
   updateLeadStatus: async (
     conversationId: string,
-    status: LeadStatus
+    status: LeadStatus,
+    agentId?: string | null
   ): Promise<void> => {
     try {
+      const version = getApiVersion(agentId);
       await apiClient.patch<UpdateLeadStatusResponse>(
-        `/v1/leads/${conversationId}/status`,
+        `/${version}/leads/${conversationId}/status`,
         { status }
       );
     } catch (error) {
@@ -75,9 +87,13 @@ const leadsApi = {
     }
   },
 
-  deleteLead: async (conversationId: string): Promise<void> => {
+  deleteLead: async (
+    conversationId: string,
+    agentId?: string | null
+  ): Promise<void> => {
     try {
-      await apiClient.delete(`/v1/leads/${conversationId}`);
+      const version = getApiVersion(agentId);
+      await apiClient.delete(`/${version}/leads/${conversationId}`);
     } catch (error) {
       console.error(
         `Error deleting lead ${conversationId}:`,
