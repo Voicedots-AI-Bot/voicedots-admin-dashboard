@@ -26,13 +26,22 @@ export function LeadsPage() {
   const [drawerOpen, setDrawerOpen] =
     useState(false);
 
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
   /* ================= FETCH LEADS ================= */
 
   useEffect(() => {
     async function fetchLeads() {
       setLoading(true);
       try {
-        const data = await leadsApi.getLeads(user?.agent_id);
+        const data = await leadsApi.getLeads({
+          agentId: user?.agent_id,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          status: statusFilter || undefined,
+        });
         setLeads(data);
       } catch (err) {
         console.error("Failed to fetch leads", err);
@@ -42,7 +51,7 @@ export function LeadsPage() {
     }
 
     fetchLeads();
-  }, []);
+  }, [user?.agent_id, startDate, endDate, statusFilter]);
 
   /* ================= HANDLERS ================= */
 
@@ -171,9 +180,52 @@ export function LeadsPage() {
           </div>
 
           {/* ACTIONS */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* DATE FILTERS */}
+            <div className="flex items-center gap-2 bg-white border rounded-xl px-2 h-11 shadow-sm">
+              <div className="flex flex-col px-2 border-r">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none mt-1">From</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="text-xs outline-none bg-transparent font-medium"
+                />
+              </div>
+              <div className="flex flex-col px-2">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none mt-1">To</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="text-xs outline-none bg-transparent font-medium"
+                />
+              </div>
+            </div>
+
+            {/* STATUS FILTER */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="
+                h-11 px-3
+                rounded-xl
+                border
+                bg-white
+                text-sm
+                outline-none
+                focus:ring-2 focus:ring-black/10
+                font-medium
+              "
+            >
+              <option value="">All Statuses</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Unqualified">Unqualified</option>
+              <option value="Follow Up">Follow Up</option>
+            </select>
+
             {/* SEARCH */}
-            <div className="relative w-full md:w-[280px]">
+            <div className="relative w-full md:w-[200px]">
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -194,6 +246,20 @@ export function LeadsPage() {
                 "
               />
             </div>
+
+            {/* CLEAR FILTERS */}
+            {(startDate || endDate || statusFilter) && (
+              <button
+                onClick={() => {
+                  setStartDate("");
+                  setEndDate("");
+                  setStatusFilter("");
+                }}
+                className="text-xs text-red-500 font-medium hover:underline px-2"
+              >
+                Clear
+              </button>
+            )}
 
             {/* DOWNLOAD EXPORT */}
             <button

@@ -6,9 +6,10 @@ from app.config.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users_db import User
 from app.models.leads_db import Lead
-from sqlalchemy import select
+from sqlalchemy import select, and_, cast, Date
 from app.helpers.lead_helper import is_valid, extract
 import uuid
+from datetime import date
 
 logger = get_logger("LeadsRouter")
 
@@ -29,6 +30,8 @@ router = APIRouter(
 async def list_leads(
     request: Request,
     status: Optional[str] = Query(default=None),
+    start_date: Optional[str] = Query(default=None),
+    end_date: Optional[str] = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ):
     try:
@@ -49,6 +52,21 @@ async def list_leads(
         if status:
             query = query.where(Lead.status.ilike(status))
 
+        if start_date:
+            try:
+                # Handle YYYY-MM-DD
+                d_start = date.fromisoformat(start_date[:10])
+                query = query.where(cast(Lead.created_at, Date) >= d_start)
+            except ValueError:
+                logger.warning(f"Invalid start_date format: {start_date}")
+
+        if end_date:
+            try:
+                d_end = date.fromisoformat(end_date[:10])
+                query = query.where(cast(Lead.created_at, Date) <= d_end)
+            except ValueError:
+                logger.warning(f"Invalid end_date format: {end_date}")
+
         result = await db.execute(query)
         leads = result.scalars().all()
 
@@ -62,6 +80,7 @@ async def list_leads(
                 "mobile": lead.mobile,
                 "business_description": lead.business_description,
                 "status": getattr(lead, "status", None),
+                "created_at": lead.created_at.isoformat() if lead.created_at and hasattr(lead.created_at, "isoformat") else None,
             }
             for lead in leads
         ]
@@ -112,6 +131,7 @@ async def get_lead_details(
             "mobile": lead.mobile,
             "business_description": lead.business_description,
             "status": getattr(lead, "status", None),
+            "created_at": lead.created_at.isoformat() if lead.created_at and hasattr(lead.created_at, "isoformat") else None,
         }
 
         return {

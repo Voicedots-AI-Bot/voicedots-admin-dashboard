@@ -1,9 +1,10 @@
 # app/models/lead.py
 
-from sqlalchemy import Column, String, Text, ForeignKey
+from sqlalchemy import Column, String, Text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.config.database import Base
+from datetime import datetime
 import uuid
 
 
@@ -26,5 +27,6 @@ class Lead(Base):
     mobile = Column(String)
     business_description = Column(Text)
     status = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="leads")

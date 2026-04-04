@@ -34,11 +34,23 @@ const getApiVersion = (agentId?: string | null): string => {
 };
 
 const leadsApi = {
-  getLeads: async (agentId?: string | null): Promise<Lead[]> => {
+  getLeads: async (options?: {
+    agentId?: string | null;
+    startDate?: string;
+    endDate?: string;
+    status?: string | null;
+  }): Promise<Lead[]> => {
     try {
-      const version = getApiVersion(agentId);
+      const version = getApiVersion(options?.agentId);
       const response = await apiClient.get<GetLeadsResponse>(
-        `/${version}/leads/`
+        `/${version}/leads/`,
+        {
+          params: {
+            start_date: options?.startDate || undefined,
+            end_date: options?.endDate || undefined,
+            status: options?.status || undefined,
+          },
+        }
       );
       return response.data.data;
     } catch (error) {
