@@ -8,6 +8,13 @@ import type { Lead } from "@/types/lead.types";
 interface GetLeadsResponse {
   status: string;
   data: Lead[];
+  pagination: {
+    total: number;
+    qualified: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 interface GetLeadDetailsResponse {
@@ -39,7 +46,9 @@ const leadsApi = {
     startDate?: string;
     endDate?: string;
     status?: string | null;
-  }): Promise<Lead[]> => {
+    page?: number;
+    limit?: number;
+  }): Promise<{ data: Lead[]; pagination: GetLeadsResponse["pagination"] }> => {
     try {
       const version = getApiVersion(options?.agentId);
       const response = await apiClient.get<GetLeadsResponse>(
@@ -49,10 +58,15 @@ const leadsApi = {
             start_date: options?.startDate || undefined,
             end_date: options?.endDate || undefined,
             status: options?.status || undefined,
+            page: options?.page || 1,
+            limit: options?.limit || 50,
           },
         }
       );
-      return response.data.data;
+      return {
+        data: response.data.data,
+        pagination: response.data.pagination,
+      };
     } catch (error) {
       console.error("Error fetching leads:", error);
       throw error;

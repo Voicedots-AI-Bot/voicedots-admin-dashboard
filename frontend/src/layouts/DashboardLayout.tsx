@@ -32,10 +32,10 @@ const DashboardLayout = () => {
           - No overflow-y-auto here (let the body/root layout scroll)
         */}
         <main
-          className={`flex-1 ${
+          className={`flex-1 min-w-0 overflow-x-hidden ${
             location.pathname.startsWith("/dashboard/conversations/")
               ? "p-0"
-              : "p-4 md:p-8"
+              : "px-3 py-4 sm:px-4 md:px-6 lg:px-8 md:py-8"
           }`}
         >
           <Outlet />

@@ -56,14 +56,14 @@ export function ConversationCard({
           </div>
 
           {/* Meta */}
-          <div className="mt-1 flex items-center gap-4 text-sm text-gray-500">
-            <span className="font-mono truncate">
+          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-gray-500">
+            <span className="font-mono truncate max-w-[150px] sm:max-w-none">
               ID: {conversation.conversation_id}
             </span>
 
-            <div className="flex items-center gap-1">
-              <MessageSquare size={14} />
-              {conversation.message_count}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <MessageSquare size={14} className="text-gray-400" />
+              <span className="font-medium">{conversation.message_count} messages</span>
             </div>
           </div>
         </div>

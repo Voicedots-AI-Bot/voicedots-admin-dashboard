@@ -12,7 +12,6 @@ from decimal import Decimal
 logger = get_logger("KPI-Helper")
 IST = timezone(timedelta(hours=5, minutes=30))
 
-
 async def add_conversation_kpi(
     db: AsyncSession,
     user_id: UUID,
@@ -30,14 +29,11 @@ async def add_conversation_kpi(
                 ConversationDetails.conversation_id == conversation_id
             )
         )
-        existing = result.scalar_one_or_none()
-
-        if existing:
+        if result.scalar_one_or_none():
             return
 
         credits_used = llm_charge + call_charge
-        cost_usd = (credits_used / 1000) * PRICE_PER_1000_CREDITS
-        cost_usd=Decimal(str(cost_usd))
+        cost_usd = Decimal(str((credits_used / 1000) * PRICE_PER_1000_CREDITS))
         
         dt = (
             datetime.fromtimestamp(start_time_unix_secs, IST)
@@ -55,11 +51,9 @@ async def add_conversation_kpi(
             call_duration_hours=call_duration_hours,
             messages_count=messages_count,
         )
-
         db.add(conversation)
-        # await db.commit()
         
-        # Fetch usage
+        # Update usage
         usage_result = await db.execute(
             select(Usage).where(Usage.user_id == user_id)
         )
@@ -71,8 +65,8 @@ async def add_conversation_kpi(
                 total_conversations=0,
                 total_messages=0,
                 total_credits=0,
-                total_cost_usd=0,
-                total_call_duration_hours=0,
+                total_cost_usd=Decimal("0"),
+                total_call_duration_hours=Decimal("0"),
             )
             db.add(usage)
 
@@ -80,62 +74,38 @@ async def add_conversation_kpi(
         usage.total_messages += messages_count
         usage.total_credits += credits_used
         usage.total_cost_usd += cost_usd
-        usage.total_call_duration_hours += call_duration_hours
+        usage.total_call_duration_hours += Decimal(str(call_duration_hours))
 
         await db.commit()
 
     except SQLAlchemyError as e:
         await db.rollback()
-        logger.error(f"Database error while adding conversation KPI: {e}")
+        logger.error(f"Database error adding conversation KPI: {e}")
         raise
-
 
 async def get_kpis(user_id: UUID, db: AsyncSession):
     try:
-        result = await db.execute(
-            select(Usage).where(Usage.user_id == user_id)
-        )
+        result = await db.execute(select(Usage).where(Usage.user_id == user_id))
         usage = result.scalar_one_or_none()
-        logger.info(f"Fetched usage for user {user_id}: {usage}")
         if not usage:
             return {
-                "total_conversations": 0,
-                "total_messages": 0,
-                "total_cost_usd": 0,
-                "avg_cost_per_conversation_usd": 0,
-                "total_call_duration_secs": 0,
-                "avg_call_duration_secs": 0,
+                "total_conversations": 0, "total_messages": 0, "total_cost_usd": 0,
+                "avg_cost_per_conversation_usd": 0, "total_call_duration_secs": 0, "avg_call_duration_secs": 0,
             }
 
-        total_conversations = usage.total_conversations or 0
-        total_messages = usage.total_messages or 0
-        total_cost_usd = usage.total_cost_usd or 0
-        total_call_duration_hours = usage.total_call_duration_hours or 0
-        total_call_duration_secs = int(total_call_duration_hours * 3600)
-
-        avg_cost = (
-            total_cost_usd / total_conversations
-            if total_conversations > 0 else 0
-        )
-
-        avg_call_duration = (
-            total_call_duration_secs / total_conversations
-            if total_conversations > 0 else 0
-        )
-
+        tc = usage.total_conversations or 0
+        dur_secs = int((usage.total_call_duration_hours or 0) * 3600)
         return {
-            "total_conversations": total_conversations,
-            "total_messages": total_messages,
-            "total_cost_usd": total_cost_usd,
-            "avg_cost_per_conversation_usd": round(avg_cost, 2),
-            "total_call_duration_secs": total_call_duration_secs,
-            "avg_call_duration_secs": int(avg_call_duration),
+            "total_conversations": tc,
+            "total_messages": usage.total_messages or 0,
+            "total_cost_usd": usage.total_cost_usd or 0,
+            "avg_cost_per_conversation_usd": round(usage.total_cost_usd / tc, 2) if tc > 0 else 0,
+            "total_call_duration_secs": dur_secs,
+            "avg_call_duration_secs": int(dur_secs / tc) if tc > 0 else 0,
         }
-
     except SQLAlchemyError:
-        logger.error("Database error while fetching KPI summary")
+        logger.error("Database error fetching KPI summary")
         raise
-
 
 async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
     try:
@@ -149,36 +119,23 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
             )
             .where(ConversationDetails.user_id == user_id)
             .group_by(ConversationDetails.date)
-            .order_by(ConversationDetails.date)
         )
 
         rows = result.all()
-
         timeseries = []
-
-        for row in rows:
-            total_secs = int((row.total_call_duration_hours or 0) * 3600)
-            avg_call_duration = (
-                total_secs / row.conversations
-                if row.conversations and row.conversations > 0 else 0
-            )
-
+        for r in rows:
+            ts = int((r.total_call_duration_hours or 0) * 3600)
             timeseries.append({
-                "date": row.date,
-                "conversations": row.conversations,
-                "messages": row.messages or 0,
-                "cost_usd": row.cost_usd or 0,
-                "total_call_duration_secs": total_secs,
-                "avg_call_duration_secs": int(avg_call_duration),
+                "date": r.date,
+                "conversations": r.conversations,
+                "messages": r.messages or 0,
+                "cost_usd": r.cost_usd or 0,
+                "total_call_duration_secs": ts,
+                "avg_call_duration_secs": int(ts / r.conversations) if r.conversations > 0 else 0,
             })
 
-        summary = await get_kpis(user_id, db)
-
-        return {
-            "summary": summary,
-            "timeseries": timeseries,
-        }
-
+        timeseries.sort(key=lambda x: datetime.strptime(x["date"], "%d %b %Y") if x["date"] else datetime.min)
+        return {"summary": await get_kpis(user_id, db), "timeseries": timeseries}
     except SQLAlchemyError:
-        logger.error("Database error while fetching KPI timeseries")
-        raise
+        logger.error("Database error fetching KPI timeseries")
+        raise

@@ -2,16 +2,14 @@ import { motion } from "framer-motion";
 import {
   MessageSquare,
   DollarSign,
-  Users,
   Activity,
   Calendar,
   Clock,
+  Users,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { kpiAPI } from "@/api/kpi";
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
-
 import { CostOverTimeChart } from "@/components/charts/CostOverTimeChart";
 import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
 import { AvgCallDurationChart } from "@/components/charts/AvgCallDurationChart";
@@ -19,32 +17,47 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  Tooltip,
 } from "recharts";
 
 /* ================= TYPES & HELPERS ================= */
 
 type Preset = "7d" | "15d" | "30d" | "all" | "custom";
 
+// Official integration began March 23rd, 2026. 
+// Do not start counts before this to avoid skewed percentages.
+const INTEGRATION_DATE = "2026-03-23";
+
 const formatUsd = (v = 0) => `$${v.toFixed(2)}`;
 const formatHours = (secs = 0) => `${(secs / 3600).toFixed(1)}h`;
+
+const getSafeLocalDate = (dateInput: string | Date) => {
+  const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (isNaN(d.getTime())) return null;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const getRangeFromPreset = (preset: Preset) => {
   const end = new Date();
   const start = new Date();
 
-  if (preset === "all") {
-    start.setFullYear(2000);
-  } else if (preset === "7d") {
-    start.setDate(end.getDate() - 6);
-  } else if (preset === "15d") {
-    start.setDate(end.getDate() - 14);
-  } else if (preset === "30d") {
-    start.setDate(end.getDate() - 29);
+  switch (preset) {
+    case "7d": start.setDate(end.getDate() - 6); break;
+    case "15d": start.setDate(end.getDate() - 14); break;
+    case "30d": start.setDate(end.getDate() - 29); break;
+    case "all": start.setTime(new Date(INTEGRATION_DATE).getTime()); break;
   }
 
+  const startStr = getSafeLocalDate(start) || start.toISOString().slice(0, 10);
+  const endStr = getSafeLocalDate(end) || end.toISOString().slice(0, 10);
+
+  // Clamp to INTEGRATION_DATE if preset would go before it
   return {
-    from: start.toISOString().slice(0, 10),
-    to: end.toISOString().slice(0, 10),
+    from: startStr < INTEGRATION_DATE ? INTEGRATION_DATE : startStr,
+    to: endStr,
   };
 };
 
@@ -58,309 +71,316 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-/* ================= HOME PAGE ================= */
+/* ================= COMPONENTS ================= */
+
+const MiniSparkline = ({ data, color, formatter }: { data: any[], color: string, formatter?: (v: number) => string }) => (
+  <div className="h-10 w-24">
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={data}>
+        <defs>
+          <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.15} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <Tooltip
+          content={(props: any) => {
+            const { active, payload } = props;
+            if (active && payload && payload.length) {
+              const val = Number(payload[0].value);
+              return (
+                <div className="rounded-lg bg-slate-900 px-2 py-1 text-[10px] text-white shadow-xl ring-1 ring-white/20 whitespace-nowrap">
+                  {formatter ? formatter(val) : val.toLocaleString()}
+                </div>
+              );
+            }
+            return null;
+          }}
+          cursor={false}
+        />
+        <Area
+          type="monotone"
+          dataKey="value"
+          stroke={color}
+          strokeWidth={1.5}
+          fill={`url(#gradient-${color.replace('#', '')})`}
+          fillOpacity={1}
+          isAnimationActive={false}
+          activeDot={{ r: 3, strokeWidth: 0, fill: color }}
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  </div>
+);
+
+/* ================= MAIN PAGE ================= */
 
 export function HomePage() {
   const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [preset, setPreset] = useState<Preset>("7d");
+  const [{ from, to }, setRange] = useState(() => getRangeFromPreset("7d"));
+  const pollTimer = useRef<any>(null);
 
-  /* ===== GLOBAL DATE RANGE ===== */
-  const [preset, setPreset] = useState<Preset>("all");
-  const [{ from, to }, setRange] = useState(() =>
-    getRangeFromPreset("all")
-  );
-
-  useEffect(() => {
-    kpiAPI
-      .getKpis()
-      .then((res) => {
-        setTimeseries(res.timeseries);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+  const fetchKPIs = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const res = await kpiAPI.getKpis();
+      setTimeseries(res.timeseries);
+    } catch (err) {
+      console.error("Failed to fetch KPIs:", err);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
   }, []);
 
-  const handlePresetChange = (p: Preset) => {
+  useEffect(() => {
+    fetchKPIs();
+    pollTimer.current = setInterval(() => fetchKPIs(true), 120000); // 2 min polling
+    return () => { if (pollTimer.current) clearInterval(pollTimer.current); };
+  }, [fetchKPIs]);
+
+  const handlePresetChange = useCallback((p: Preset) => {
     setPreset(p);
-    if (p !== "custom") {
+    if (p === "custom") return;
+
+    if (p === "all" && timeseries.length > 0) {
+      const dates = timeseries.map(pt => new Date(pt.date).getTime());
+      setRange({
+        from: getSafeLocalDate(new Date(Math.min(...dates))) || "2020-01-01",
+        to: getSafeLocalDate(new Date()) || new Date().toISOString().slice(0, 10)
+      });
+    } else {
       setRange(getRangeFromPreset(p));
     }
-  };
+  }, [timeseries]);
 
-  const handleDateChange = (f: string, t: string) => {
-    setPreset("custom");
-    setRange({ from: f, to: t });
-  };
-
-  /* ===== FILTER DATA ONCE ===== */
   const filteredData = useMemo(() => {
-    return timeseries
-      .filter((p) => {
-        const d = new Date(p.date).toISOString().slice(0, 10);
-        return d >= from && d <= to;
-      })
-      .sort(
-        (a, b) =>
-          new Date(a.date).getTime() -
-          new Date(b.date).getTime()
-      ); // 👈 IMPORTANT
-  }, [timeseries, from, to]);
+    if (!timeseries.length) return [];
 
-  const previousFilteredData = useMemo(() => {
-    if (preset === "all") return [];
-
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
-    const durationDays = Math.round((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    const prevToDate = new Date(fromDate);
-    prevToDate.setDate(prevToDate.getDate() - 1);
-
-    const prevFromDate = new Date(prevToDate);
-    prevFromDate.setDate(prevFromDate.getDate() - durationDays + 1);
-
-    const prevFrom = prevFromDate.toISOString().slice(0, 10);
-    const prevTo = prevToDate.toISOString().slice(0, 10);
-
-    return timeseries.filter((p) => {
-      const d = new Date(p.date).toISOString().slice(0, 10);
-      return d >= prevFrom && d <= prevTo;
+    // Filter out data before integration to ensure accuracy
+    const activeData = timeseries.filter(pt => {
+      const d = getSafeLocalDate(pt.date);
+      return d && d >= INTEGRATION_DATE;
     });
+
+    if (preset === "all") {
+      return activeData
+        .filter(p => {
+          const d = getSafeLocalDate(p.date);
+          return d && d >= from && d <= to;
+        })
+        .map(p => ({
+          ...p,
+          date: getSafeLocalDate(p.date) || p.date,
+          avg_call_duration_secs: p.avg_call_duration_secs ?? 0
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+
+    const pointsMap = new Map<string, KpiTimeseriesPoint>();
+    activeData.forEach(p => {
+      const d = getSafeLocalDate(p.date);
+      if (d) pointsMap.set(d, p);
+    });
+
+    const result: KpiTimeseriesPoint[] = [];
+    let curr = new Date(from + "T00:00:00");
+    const end = new Date(to + "T00:00:00");
+
+    while (curr <= end) {
+      const dStr = getSafeLocalDate(curr);
+      if (!dStr) break;
+
+      const existing = pointsMap.get(dStr);
+      result.push(existing ? {
+        ...existing,
+        date: dStr,
+        avg_call_duration_secs: existing.avg_call_duration_secs ?? 0
+      } : {
+        date: dStr,
+        conversations: 0,
+        cost_usd: 0,
+        messages: 0,
+        total_call_duration_secs: 0,
+        avg_call_duration_secs: 0
+      });
+      curr.setDate(curr.getDate() + 1);
+    }
+    return result;
   }, [timeseries, from, to, preset]);
 
-  const computeMetrics = (data: KpiTimeseriesPoint[]) => {
-    const totalConversations = data.reduce((sum, p) => sum + p.conversations, 0);
-    const totalCost = data.reduce((sum, p) => sum + p.cost_usd, 0);
-    const totalMessages = data.reduce((sum, p) => sum + p.messages, 0);
-    const totalDuration = data.reduce((sum, p) => sum + p.total_call_duration_secs, 0);
-    const avgCost = totalConversations > 0 ? totalCost / totalConversations : 0;
+  const computeMetrics = useCallback((data: KpiTimeseriesPoint[]) => {
+    const metrics = data.reduce((acc, p) => ({
+      conversations: acc.conversations + p.conversations,
+      cost: acc.cost + p.cost_usd,
+      messages: acc.messages + p.messages,
+      totalDuration: acc.totalDuration + p.total_call_duration_secs,
+    }), { conversations: 0, cost: 0, messages: 0, totalDuration: 0 });
+
     return {
-      conversations: totalConversations,
-      cost: totalCost,
-      messages: totalMessages,
-      totalDuration: totalDuration,
-      avgCost: avgCost
+      ...metrics,
+      avgCost: metrics.conversations > 0 ? metrics.cost / metrics.conversations : 0
     };
+  }, []);
+
+  const previousMetrics = useMemo(() => {
+    const curM = computeMetrics(filteredData);
+    if (!timeseries.length || filteredData.length < 2) return { current: curM, previous: curM };
+
+    // Filter timeseries for valid records post-integration
+    const activeHistory = timeseries.filter(p => {
+      const d = getSafeLocalDate(p.date);
+      return d && d >= INTEGRATION_DATE;
+    });
+
+    // Determine account age based on INTEGRATION date
+    const allDates = activeHistory.map(p => new Date(p.date).getTime());
+    if (!allDates.length) return { current: curM, previous: curM };
+
+    const firstDate = Math.min(...allDates);
+    const today = new Date().getTime();
+    const accountAgeDays = (today - firstDate) / 86400000;
+    const periodDays = (new Date(to).getTime() - new Date(from).getTime()) / 86400000;
+
+    // Use Split-Half internal growth if account history is less than 1.5x the period
+    const mid = Math.floor(filteredData.length / 2);
+    const splitCurrent = computeMetrics(filteredData.slice(mid));
+    const splitPrevious = computeMetrics(filteredData.slice(0, mid));
+
+    if (preset === "all" || accountAgeDays < (periodDays * 1.5)) {
+      return { current: splitCurrent, previous: splitPrevious };
+    }
+
+    const fromTime = new Date(from + "T00:00:00").getTime();
+    const durationMs = new Date(to + "T00:00:00").getTime() - fromTime;
+    const prevTo = getSafeLocalDate(new Date(fromTime - 86400000));
+    const prevFrom = getSafeLocalDate(new Date(fromTime - durationMs - 86400000));
+
+    const prevData = activeHistory.filter(p => {
+      const d = getSafeLocalDate(p.date);
+      return d && prevFrom && prevTo && d >= prevFrom && d <= prevTo;
+    });
+
+    const prevM = computeMetrics(prevData);
+    if (prevM.conversations < (curM.conversations * 0.05) && prevM.conversations < 10) {
+      return { current: splitCurrent, previous: splitPrevious };
+    }
+
+    return { current: curM, previous: prevM };
+  }, [timeseries, from, to, preset, filteredData, computeMetrics]);
+
+  const getTrend = (key: keyof ReturnType<typeof computeMetrics>) => {
+    if (!previousMetrics) return { text: "0.0%", up: true };
+    const cur = previousMetrics.current[key];
+    const prev = previousMetrics.previous[key];
+    if (prev === 0) return { text: cur > 0 ? "+100%" : "0.0%", up: true };
+    const diff = ((cur - prev) / prev) * 100;
+    const val = diff > 999 ? 999 : diff < -999 ? -999 : diff;
+    return { text: `${val >= 0 ? '+' : ''}${val.toFixed(1)}%`, up: diff >= 0 };
   };
 
-  const currentMetrics = useMemo(() => computeMetrics(filteredData), [filteredData]);
-  const previousMetrics = useMemo(() => computeMetrics(previousFilteredData), [previousFilteredData]);
+  const currentStats = useMemo(() => computeMetrics(filteredData), [filteredData, computeMetrics]);
 
-  const calculateTrend = (current: number, previous: number) => {
-    if (previous === 0) return { text: current > 0 ? "+100%" : "0%", up: current >= 0 };
-    const diff = ((current - previous) / previous) * 100;
-    return {
-      text: `${diff > 0 ? '+' : ''}${diff.toFixed(1)}%`,
-      up: diff >= 0,
-    };
-  };
-
-  const getTrendObj = (key: keyof ReturnType<typeof computeMetrics>) => {
-    if (preset === "all") return null;
-    return calculateTrend(currentMetrics[key], previousMetrics[key]);
-  };
-
-  /* ===== KPI CARDS ===== */
   const stats = [
-    {
-      label: "TOTAL CONVERSATIONS",
-      value: loading ? "—" : currentMetrics.conversations,
-      icon: MessageSquare,
-      trendObj: getTrendObj("conversations"),
-      color: "#000000",
-      bgClass: "bg-white",
-      textClass: "text-slate-900",
-      ringClass: "ring-slate-200",
-      dataKey: "conversations",
-    },
-    {
-      label: "TOTAL COST",
-      value: loading ? "—" : formatUsd(currentMetrics.cost),
-      icon: DollarSign,
-      trendObj: getTrendObj("cost"),
-      color: "#000000",
-      bgClass: "bg-white",
-      textClass: "text-slate-900",
-      ringClass: "ring-slate-200",
-      dataKey: "cost_usd",
-    },
-    {
-      label: "TOTAL MESSAGES",
-      value: loading ? "—" : currentMetrics.messages.toLocaleString(),
-      icon: Activity,
-      trendObj: getTrendObj("messages"),
-      color: "#000000",
-      bgClass: "bg-white",
-      textClass: "text-slate-900",
-      ringClass: "ring-slate-200",
-      dataKey: "messages",
-    },
-    {
-      label: "TOTAL DURATION",
-      value: loading ? "—" : formatHours(currentMetrics.totalDuration),
-      icon: Clock,
-      trendObj: getTrendObj("totalDuration"),
-      color: "#000000",
-      bgClass: "bg-white",
-      textClass: "text-slate-900",
-      ringClass: "ring-slate-200",
-      dataKey: "total_call_duration_secs",
-    },
-    {
-      label: "AVG COST / CONV",
-      value: loading ? "—" : formatUsd(currentMetrics.avgCost),
-      icon: Users,
-      trendObj: getTrendObj("avgCost"),
-      color: "#000000",
-      bgClass: "bg-white",
-      textClass: "text-slate-900",
-      ringClass: "ring-slate-200",
-      dataKey: "avg_cost", // specialized calculation in map
-    },
+    { label: "TOTAL CONVERSATIONS", value: loading ? "—" : currentStats.conversations.toLocaleString(), icon: MessageSquare, trend: getTrend("conversations"), dataKey: "conversations", format: (v: number) => `${v} convs` },
+    { label: "TOTAL COST", value: loading ? "—" : formatUsd(currentStats.cost), icon: DollarSign, trend: getTrend("cost"), dataKey: "cost_usd", format: formatUsd },
+    { label: "TOTAL MESSAGES", value: loading ? "—" : currentStats.messages.toLocaleString(), icon: Activity, trend: getTrend("messages"), dataKey: "messages", format: (v: number) => `${v.toLocaleString()} msgs` },
+    { label: "TOTAL DURATION", value: loading ? "—" : formatHours(currentStats.totalDuration), icon: Clock, trend: getTrend("totalDuration"), dataKey: "total_call_duration_secs", format: (v: number) => `${Math.floor(v / 60)}m ${Math.round(v % 60)}s` },
+    { label: "AVG COST / CONV", value: loading ? "—" : formatUsd(currentStats.avgCost), icon: Users, trend: getTrend("avgCost"), dataKey: "avg_cost", format: formatUsd },
   ];
-
-  const MiniSparkline = ({ data, color }: { data: any[], color: string }) => (
-    <div className="h-10 w-24">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
-          <defs>
-            <linearGradient id={`gradient-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.15}/>
-              <stop offset="95%" stopColor={color} stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={1.5}
-            fill={`url(#gradient-${color.replace('#','')})`}
-            fillOpacity={1}
-            isAnimationActive={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  );
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
+    return hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
   }, []);
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-8"
-    >
-      {/* ================= HEADER & CONTROLS ================= */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="text-sm font-semibold tracking-tight text-slate-400">
-            {greeting}
-          </p>
-          <div className="flex items-center gap-3">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-              Dashboard <span className="text-blue-600">Overview</span>
-            </h1>
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
+      <div className="flex flex-col items-center lg:items-start gap-6 lg:flex-row lg:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center justify-center lg:justify-start gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{greeting}</p>
+            <span className="h-px w-8 bg-slate-200"></span>
           </div>
-          <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
-            Real-time analytics and performance metrics.
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 ring-1 ring-emerald-200/50">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
-              LIVE
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900">
+            Dashboard <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Overview</span>
+          </h1>
+          <div className="flex items-center justify-center lg:justify-start gap-3 text-sm font-medium text-slate-500">
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 ring-1 ring-emerald-500/20">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              System Live
             </span>
-          </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 rounded-2xl bg-slate-100/50 p-1.5 ring-1 ring-slate-200/60 backdrop-blur-sm">
-          <div className="flex items-center">
-            {(["all", "7d", "15d", "30d"] as Preset[]).map((p) => (
+        <div className="flex flex-col sm:flex-row items-center gap-2 rounded-[22px] bg-white p-2 shadow-sm ring-1 ring-slate-200/60 backdrop-blur-md">
+          <div className="flex items-center p-1 bg-slate-50 rounded-xl">
+            {(["7d", "15d", "30d", "all"] as Preset[]).map((p) => (
               <button
                 key={p}
                 onClick={() => handlePresetChange(p)}
-                className={`rounded-xl px-4 py-1.5 text-[11px] font-bold tracking-wide transition-all duration-200 ${preset === p
-                  ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
-                  : "text-slate-500 hover:bg-white hover:text-slate-900"
-                  }`}
+                className={`rounded-lg px-4 py-1.5 text-[11px] font-bold tracking-tight transition-all duration-300 ${preset === p ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-400 hover:text-slate-600"}`}
               >
                 {p === "30d" ? "1M" : p === "all" ? "ALL" : p.toUpperCase()}
               </button>
             ))}
           </div>
-
-          <div className="h-4 w-px bg-slate-300 mx-1"></div>
-
-          <div className="flex items-center gap-2 px-2">
-            <div className="flex items-center gap-1.5">
-              <Calendar size={14} className="text-slate-400" />
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => handleDateChange(e.target.value, to)}
-                className="bg-transparent text-[11px] font-semibold text-slate-600 outline-none focus:ring-0"
-              />
+          <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2"></div>
+          <div className="flex items-center justify-center gap-3 px-2 py-1 sm:py-0">
+            <div className="flex items-center gap-2 group">
+              <Calendar size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+              <input type="date" value={from} onChange={(e) => { setPreset("custom"); setRange({ from: e.target.value, to }); }} className="bg-transparent text-[11px] font-bold text-slate-600 outline-none w-28 cursor-pointer hover:text-slate-900" />
             </div>
-            <span className="text-slate-300 text-[10px]">→</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => handleDateChange(from, e.target.value)}
-              className="bg-transparent text-[11px] font-semibold text-slate-600 outline-none focus:ring-0"
-            />
+            <span className="text-slate-300 font-bold">→</span>
+            <div className="flex items-center gap-2 group">
+              <input type="date" value={to} onChange={(e) => { setPreset("custom"); setRange({ from, to: e.target.value }); }} className="bg-transparent text-[11px] font-bold text-slate-600 outline-none w-28 cursor-pointer hover:text-slate-900" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ================= KPI CARDS ================= */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((stat) => (
-          <motion.div
-            key={stat.label}
-            variants={item}
-            className="group relative overflow-hidden rounded-3xl bg-white/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/50 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300/60 cursor-pointer"
-          >
-            <div className="flex items-start justify-between">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.bgClass} ${stat.textClass} ring-1 ${stat.ringClass}`}>
-                <stat.icon className="h-5 w-5" />
+          <motion.div key={stat.label} variants={item} className="group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300 cursor-pointer">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-900 ring-1 ring-slate-200 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm">
+                <stat.icon className="h-6 w-6" />
+              </div>
+              <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tracking-tighter ${stat.trend.up ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100" : "bg-red-50 text-red-600 ring-1 ring-red-100"}`}>
+                {stat.trend.up ? "↑" : "↓"} {stat.trend.text}
               </div>
             </div>
-
-            <div className="mt-6">
-              <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                {stat.label}
-              </p>
-              <div className="mt-1 flex items-end justify-between gap-2">
-                <p className="text-2xl font-bold tracking-tight text-slate-900">
-                  {stat.value}
-                </p>
-                <div className="pb-1">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold tracking-[0.1em] text-slate-400 uppercase">{stat.label}</p>
+              <div className="flex items-end justify-between gap-3">
+                <h2 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">{stat.value}</h2>
+                <div className="pb-1.5 opacity-40 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden">
                   <MiniSparkline
-                    data={filteredData.map(p => ({ 
-                      value: stat.label.includes("AVG COST") 
-                        ? (p.conversations > 0 ? (p.cost_usd / p.conversations) : 0) 
-                        : p[stat.dataKey as keyof KpiTimeseriesPoint] 
+                    data={filteredData.map(p => ({
+                      value: stat.label.includes("AVG COST") ? (p.conversations > 0 ? (p.cost_usd / p.conversations) : 0) : (p as any)[stat.dataKey]
                     }))}
-                    color="#111827"
+                    color={stat.trend.up ? "#10b981" : "#ef4444"}
+                    formatter={stat.format}
                   />
                 </div>
               </div>
             </div>
+            <div className="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-700 group-hover:w-full" />
           </motion.div>
         ))}
       </div>
 
-      {/* ================= CHARTS ================= */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <CostOverTimeChart data={filteredData} />
         <ConversationsPerDayChart data={filteredData} />
       </div>
-
       <AvgCallDurationChart data={filteredData} />
     </motion.div>
   );
 }
+
+

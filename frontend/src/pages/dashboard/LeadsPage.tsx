@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Phone,
   Search,
@@ -10,7 +10,6 @@ import leadsApi from "@/api/leads";
 import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
 import { LeadsKpi } from "@/components/leadsKpi";
 import type { Lead } from "@/types/lead.types";
-
 import { useAuth } from "@/context/AuthContext";
 
 const DRAWER_WIDTH = 420;
@@ -20,378 +19,190 @@ export function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const [selectedLead, setSelectedLead] =
-    useState<Lead | null>(null);
-  const [drawerOpen, setDrawerOpen] =
-    useState(false);
-
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    qualified: 0,
+    page: 1,
+    limit: 50,
+    pages: 0
+  });
 
-  /* ================= FETCH LEADS ================= */
-
-  useEffect(() => {
-    async function fetchLeads() {
-      setLoading(true);
-      try {
-        const data = await leadsApi.getLeads({
-          agentId: user?.agent_id,
-          startDate: startDate || undefined,
-          endDate: endDate || undefined,
-          status: statusFilter || undefined,
-        });
-        setLeads(data);
-      } catch (err) {
-        console.error("Failed to fetch leads", err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchLeads = useCallback(async (isExport = false) => {
+    if (!user?.agent_id && !isExport) return;
+    if (!isExport) setLoading(true);
+    try {
+      const response = await leadsApi.getLeads({
+        agentId: user?.agent_id,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        status: statusFilter || undefined,
+        page: isExport ? 1 : page,
+        limit: isExport ? 10000 : 50,
+      });
+      if (isExport) return response.data;
+      setLeads(response.data);
+      setPagination(response.pagination);
+    } catch (err) {
+      console.error("Failed to fetch leads:", err);
+    } finally {
+      if (!isExport) setLoading(false);
     }
+  }, [user?.agent_id, startDate, endDate, statusFilter, page]);
 
-    fetchLeads();
-  }, [user?.agent_id, startDate, endDate, statusFilter]);
+  useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  /* ================= HANDLERS ================= */
+  useEffect(() => { setPage(1); }, [startDate, endDate, statusFilter, search]);
 
-  async function handleDeleteLead(
-    e: React.MouseEvent,
-    conversationId: string
-  ) {
+  const handleDeleteLead = async (e: React.MouseEvent, conversationId: string) => {
     e.stopPropagation();
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this lead?"
-      )
-    )
-      return;
-
+    if (!window.confirm("Are you sure you want to delete this lead?")) return;
     try {
       await leadsApi.deleteLead(conversationId, user?.agent_id);
-      setLeads((prev) =>
-        prev.filter(
-          (l) => l.conversation_id !== conversationId
-        )
-      );
-      if (
-        selectedLead?.conversation_id === conversationId
-      ) {
+      setLeads(prev => prev.filter(l => l.conversation_id !== conversationId));
+      if (selectedLead?.conversation_id === conversationId) {
         setDrawerOpen(false);
         setSelectedLead(null);
       }
     } catch (err) {
-      console.error("Delete failed", err);
+      console.error("Delete failed:", err);
     }
-  }
+  };
 
-  /* ================= DERIVED DATA ================= */
-
-  const filteredLeads = leads.filter(
-    (l) =>
+  const filteredLeads = useMemo(() => 
+    leads.filter(l => 
       (l.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
       (l.email ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+    ), [leads, search]);
 
-  const totalLeads = leads.length;
-
-  const qualifiedLeads = leads.filter(
-    (l) => l.status === "Qualified"
-  ).length;
-
-  /* ================= HANDLERS ================= */
-
-  const handleDownloadExcel = () => {
-    if (leads.length === 0) return;
-
-    const escapeCsv = (str: string | undefined | null) => {
-      if (!str) return '""';
-      const escaped = String(str).replace(/"/g, '""');
-      return `"${escaped}"`;
-    };
-
-    const formatDateTime = (isoStr: string | undefined | null) => {
-      if (!isoStr) return '""';
-      const d = new Date(isoStr);
+  const generateDownload = (leadsToExport: Lead[], filename: string) => {
+    if (!leadsToExport.length) return;
+    const escapeCsv = (str: any) => `"${String(str || "").replace(/"/g, '""')}"`;
+    const formatDt = (iso: any) => {
+      const d = new Date(iso);
       if (isNaN(d.getTime())) return '""';
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const day = pad(d.getDate());
-      const month = pad(d.getMonth() + 1);
-      const year = d.getFullYear();
-      const hours = pad(d.getHours());
-      const mins = pad(d.getMinutes());
-      const secs = pad(d.getSeconds());
-      return `"${day}/${month}/${year}, ${hours}:${mins}:${secs}"`;
+      const p = (n: number) => String(n).padStart(2, "0");
+      return `"${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}"`;
     };
 
-    // Sort leads by date — newest first
-    const sortedLeads = [...leads].sort((a, b) => {
-      const da = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const db = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return db - da;
-    });
+    const headers = ["Name", "Phone", "Email", "Description", "Status", "Date"].join(",");
+    const rows = leadsToExport.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      .map(l => [escapeCsv(l.name), escapeCsv((l as any).mobile), escapeCsv(l.email), escapeCsv(l.business_description), escapeCsv(l.status), formatDt(l.created_at)].join(","));
 
-    const headers = ["Name", "Phone", "Email", "Description", "Status", "Date"];
-    const csvContent = [
-      headers.join(","),
-      ...sortedLeads.map((lead) => {
-        const name = escapeCsv(lead.name);
-        const phone = escapeCsv((lead as any).mobile || lead.mobile);
-        const email = escapeCsv(lead.email);
-        const desc = escapeCsv(lead.business_description);
-        const status = escapeCsv(lead.status);
-        const dateTime = formatDateTime(lead.created_at);
-        return [name, phone, email, desc, status, dateTime].join(",");
-      })
-    ].join("\n");
-
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\uFEFF" + [headers, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "leads_export.csv");
+    link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  /* ================= RENDER ================= */
-
   return (
     <>
-      {/* ================= MAIN CONTENT ================= */}
-      <div
-        className="flex flex-col gap-6 transition-all duration-300"
-        style={{
-          marginRight: drawerOpen
-            ? `${DRAWER_WIDTH}px`
-            : "0px",
-        }}
-      >
-        {/* ================= HEADER ================= */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">
-              Leads
-            </h1>
-            <p className="text-gray-500">
-              Captured automatically by your AI avatar
-            </p>
+      <div className="flex flex-col gap-6 transition-all duration-300" style={{ marginRight: (drawerOpen && window.innerWidth > 1024) ? `${DRAWER_WIDTH}px` : "0px" }}>
+        <div className="flex flex-col items-center md:items-end md:flex-row md:justify-between gap-4 mb-4">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Leads</h1>
+            <p className="text-base font-medium text-slate-500">Captured automatically by your AI avatar</p>
           </div>
 
-          {/* ACTIONS */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* DATE FILTERS */}
-            <div className="flex items-center gap-2 bg-white border rounded-xl px-2 h-11 shadow-sm">
-              <div className="flex flex-col px-2 border-r">
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none mt-1">From</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="text-xs outline-none bg-transparent font-medium"
-                />
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 px-2">
+            <div className="flex items-center bg-white border border-slate-200 rounded-xl h-11 shadow-sm overflow-hidden ring-1 ring-slate-100">
+              <div className="flex flex-col px-3 border-r border-slate-100 group">
+                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest leading-none mt-1.5 group-hover:text-blue-500 transition-colors">From</span>
+                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="text-xs outline-none bg-transparent font-semibold py-0.5 cursor-pointer" />
               </div>
-              <div className="flex flex-col px-2">
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none mt-1">To</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="text-xs outline-none bg-transparent font-medium"
-                />
+              <div className="flex flex-col px-3 group">
+                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest leading-none mt-1.5 group-hover:text-blue-500 transition-colors">To</span>
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="text-xs outline-none bg-transparent font-semibold py-0.5 cursor-pointer" />
               </div>
             </div>
 
-            {/* STATUS FILTER */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="
-                h-11 px-3
-                rounded-xl
-                border
-                bg-white
-                text-sm
-                outline-none
-                focus:ring-2 focus:ring-black/10
-                font-medium
-              "
-            >
-              <option value="">All Statuses</option>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={`h-11 px-4 rounded-xl border text-sm outline-none font-bold shadow-sm min-w-[130px] transition-all hover:border-slate-300 ${statusFilter === "Qualified" ? "bg-green-50 text-green-700 border-green-200" : statusFilter === "Unqualified" ? "bg-red-50 text-red-700 border-red-200" : statusFilter === "Follow Up" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-white text-slate-700 border-slate-200"}`}>
+              <option value="">All Status</option>
               <option value="Qualified">Qualified</option>
               <option value="Unqualified">Unqualified</option>
               <option value="Follow Up">Follow Up</option>
             </select>
 
-            {/* SEARCH */}
-            <div className="relative w-full md:w-[200px]">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                placeholder="Search leads"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="
-                  w-full h-11
-                  pl-10 pr-3
-                  rounded-xl
-                  border
-                  bg-white
-                  text-sm
-                  outline-none
-                  focus:ring-2 focus:ring-black/10
-                "
-              />
+            <div className="relative min-w-[200px] flex-1 md:flex-none">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input placeholder="Search leads..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 bg-white text-sm font-medium outline-none focus:ring-2 focus:ring-slate-100 shadow-sm transition-all hover:border-slate-300" />
             </div>
 
-            {/* CLEAR FILTERS */}
             {(startDate || endDate || statusFilter) && (
-              <button
-                onClick={() => {
-                  setStartDate("");
-                  setEndDate("");
-                  setStatusFilter("");
-                }}
-                className="text-xs text-red-500 font-medium hover:underline px-2"
-              >
-                Clear
-              </button>
+              <button onClick={() => { setStartDate(""); setEndDate(""); setStatusFilter(""); }} className="text-sm text-red-500 font-bold hover:text-red-600 transition-colors px-1">Clear</button>
             )}
 
-            {/* DOWNLOAD EXPORT */}
-            <button
-              onClick={handleDownloadExcel}
-              disabled={leads.length === 0}
-              className="
-                flex items-center gap-2 h-11 px-4
-                bg-black text-white
-                rounded-xl text-sm font-medium
-                hover:bg-gray-800 transition
-                disabled:opacity-50 disabled:cursor-not-allowed
-                shrink-0
-              "
-            >
-              <Download size={16} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
+            <div className="relative">
+              <button onClick={() => setExportMenuOpen(!exportMenuOpen)} disabled={leads.length === 0} className="flex items-center justify-center gap-2.5 h-11 px-5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all disabled:opacity-50 shadow-lg shadow-slate-200/50 active:scale-95"><Download size={18} /><span>Export</span></button>
+              {exportMenuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1">
+                  <button onClick={() => { generateDownload(leads, "leads_current.csv"); setExportMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50">Current Page</button>
+                  <button onClick={async () => { const all = await fetchLeads(true); if (all) generateDownload(all as Lead[], "leads_all.csv"); setExportMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">All Leads</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* ================= KPI SECTION ================= */}
-        {!loading && (
-          <LeadsKpi
-            totalLeads={totalLeads}
-            qualifiedLeads={qualifiedLeads}
-          />
+        {!loading && <LeadsKpi totalLeads={pagination.total} qualifiedLeads={pagination.qualified} />}
+
+        {!loading && pagination.pages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 sm:py-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Page <span className="text-slate-900">{pagination.page}</span> of <span className="text-slate-900">{pagination.pages}</span></p>
+              <div className="h-4 w-px bg-slate-200 mx-2"></div>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400">Total <span className="text-slate-900 font-black">{pagination.total}</span> leads</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="flex items-center justify-center px-4 h-9 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-50 disabled:opacity-40">Prev</button>
+              <div className="flex items-center gap-1">
+                {[...Array(pagination.pages)].map((_, i) => {
+                  const pNum = i + 1;
+                  if (pNum === 1 || pNum === pagination.pages || (pNum >= page - 1 && pNum <= page + 1)) {
+                    return <button key={pNum} onClick={() => setPage(pNum)} className={`w-9 h-9 flex items-center justify-center rounded-xl text-[10px] sm:text-xs font-black transition-all ${page === pNum ? "bg-slate-900 text-white shadow-md" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"}`}>{pNum}</button>;
+                  }
+                  if (pNum === 2 || pNum === pagination.pages - 1) return <span key={pNum} className="text-slate-300 font-bold px-1">.</span>;
+                  return null;
+                })}
+              </div>
+              <button disabled={page >= pagination.pages} onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} className="flex items-center justify-center px-4 h-9 bg-slate-900 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-800 shadow-lg shadow-slate-200/50 disabled:opacity-40">Next</button>
+            </div>
+          </div>
         )}
 
-        {/* ================= LEADS LIST ================= */}
-
         <div className="space-y-2 pr-1">
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Loader2 className="animate-spin text-gray-400" />
-            </div>
-          ) : filteredLeads.length === 0 ? (
-            <div className="flex justify-center items-center py-20 text-gray-500 text-sm">
-              No leads found
-            </div>
-          ) : (
-            filteredLeads.map((lead) => (
-              <div
-                key={lead.conversation_id}
-                onClick={() => {
-                  setSelectedLead(lead);
-                  setDrawerOpen(true);
-                }}
-                className="
-                flex items-center
-                bg-white border rounded-xl
-                px-4 py-3
-                cursor-pointer transition hover:bg-gray-50
-                gap-4
-              "
-              >
-                {/* LEFT (flex-grow) */}
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold shrink-0">
-                    {(lead.name ?? "?")
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">
-                      {lead.name ?? "Unknown"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {lead.email ?? "—"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* PHONE */}
-                <div className="hidden lg:flex items-center gap-2 text-sm text-gray-600 w-[180px] shrink-0 justify-start">
-                  <Phone size={14} />
-                  <span className="truncate">{lead.mobile ?? "—"}</span>
-                </div>
-
-                {/* STATUS (fixed width center aligned) */}
-                <div className="w-[130px] flex justify-center shrink-0">
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-medium ${lead.status === "Qualified"
-                      ? "bg-green-50 text-green-700"
-                      : lead.status === "Unqualified"
-                        ? "bg-yellow-50 text-yellow-700"
-                        : "bg-blue-50 text-blue-700"
-                      }`}
-                  >
-                    {lead.status}
-                  </span>
-                </div>
-
-                {/* ACTION */}
-                <div className="w-10 flex justify-end shrink-0 gap-2">
-                  <button
-                    onClick={(e) =>
-                      handleDeleteLead(e, lead.conversation_id)
-                    }
-                    className="w-9 h-9 rounded-full border flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all duration-200"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+          {loading ? <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-gray-400" /></div> : filteredLeads.length === 0 ? <div className="flex justify-center items-center py-20 text-gray-500 text-sm">No leads found</div> : filteredLeads.map((lead) => (
+            <div key={lead.conversation_id} onClick={() => { setSelectedLead(lead); setDrawerOpen(true); }} className="flex items-center bg-white border rounded-xl px-4 py-3 cursor-pointer transition hover:bg-gray-50 gap-4">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold shrink-0 text-slate-600">{(lead.name ?? "?").split(" ").map(n => n[0]).join("").toUpperCase()}</div>
+                <div className="min-w-0"><p className="font-semibold truncate text-slate-900">{lead.name ?? "Unknown"}</p><p className="text-xs text-slate-500 truncate">{lead.email ?? "—"}</p></div>
               </div>
-            ))
-          )}
+              <div className="hidden lg:flex items-center gap-2 text-sm text-slate-600 w-[180px] shrink-0"><Phone size={14} className="text-slate-400" /><span className="truncate">{lead.mobile ?? "—"}</span></div>
+              <div className="w-[130px] flex justify-center shrink-0"><span className={`text-[11px] px-3 py-1 rounded-full font-bold ${lead.status === "Qualified" ? "bg-emerald-50 text-emerald-700" : lead.status === "Unqualified" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{lead.status}</span></div>
+              <div className="w-10 flex justify-end shrink-0"><button onClick={(e) => handleDeleteLead(e, lead.conversation_id)} className="w-9 h-9 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all"><Trash2 size={16} /></button></div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ================= DRAWER ================= */}
       <LeadDetailsDrawer
         lead={selectedLead}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onUpdateLead={(updatedLead) => {
-          setLeads((prevLeads) =>
-            prevLeads.map((l) =>
-              l.conversation_id === updatedLead.conversation_id ? updatedLead : l
-            )
-          );
-          setSelectedLead(updatedLead);
-        }}
-        onDeleteLead={(conversationId) => {
-          setLeads((prev) =>
-            prev.filter((l) => l.conversation_id !== conversationId)
-          );
-          setDrawerOpen(false);
-          setSelectedLead(null);
-        }}
+        onUpdateLead={(updated) => { setLeads(prev => prev.map(l => l.conversation_id === updated.conversation_id ? updated : l)); setSelectedLead(updated); }}
+        onDeleteLead={(id) => { setLeads(prev => prev.filter(l => l.conversation_id !== id)); setDrawerOpen(false); setSelectedLead(null); }}
       />
     </>
   );
 }
+
