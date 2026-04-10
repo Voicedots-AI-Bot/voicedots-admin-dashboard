@@ -143,7 +143,14 @@ export function LeadsPage() {
             )}
 
             <div className="relative">
-              <button onClick={() => setExportMenuOpen(!exportMenuOpen)} disabled={leads.length === 0} className="flex items-center justify-center gap-2.5 h-11 px-5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all disabled:opacity-50 shadow-lg shadow-slate-200/50 active:scale-95"><Download size={18} /><span>Export</span></button>
+              <button 
+                onClick={() => setExportMenuOpen(!exportMenuOpen)} 
+                disabled={leads.length === 0} 
+                className="flex items-center justify-center gap-2.5 h-11 px-5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-100 active:scale-95"
+              >
+                <Download size={18} />
+                <span>Export</span>
+              </button>
               {exportMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl z-50 p-1">
                   <button onClick={() => { generateDownload(leads, "leads_current.csv"); setExportMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 rounded-lg transition-colors border-b border-slate-50">Current Page</button>
@@ -159,23 +166,35 @@ export function LeadsPage() {
         {!loading && pagination.pages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-4 sm:py-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
             <div className="flex items-center gap-2">
-              <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Page <span className="text-slate-900">{pagination.page}</span> of <span className="text-slate-900">{pagination.pages}</span></p>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Page <span className="text-indigo-600">{pagination.page}</span> of <span className="text-indigo-600">{pagination.pages}</span></p>
               <div className="h-4 w-px bg-slate-200 mx-2"></div>
               <p className="text-[10px] sm:text-xs font-bold text-slate-400">Total <span className="text-slate-900 font-black">{pagination.total}</span> leads</p>
             </div>
             <div className="flex items-center gap-2">
-              <button disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="flex items-center justify-center px-4 h-9 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-50 disabled:opacity-40">Prev</button>
+              <button 
+                disabled={page <= 1} 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                className="flex items-center justify-center px-4 h-9 bg-indigo-600 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-40"
+              >
+                Prev
+              </button>
               <div className="flex items-center gap-1">
                 {[...Array(pagination.pages)].map((_, i) => {
                   const pNum = i + 1;
                   if (pNum === 1 || pNum === pagination.pages || (pNum >= page - 1 && pNum <= page + 1)) {
-                    return <button key={pNum} onClick={() => setPage(pNum)} className={`w-9 h-9 flex items-center justify-center rounded-xl text-[10px] sm:text-xs font-black transition-all ${page === pNum ? "bg-slate-900 text-white shadow-md" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"}`}>{pNum}</button>;
+                    return <button key={pNum} onClick={() => setPage(pNum)} className={`w-9 h-9 flex items-center justify-center rounded-xl text-[10px] sm:text-xs font-black transition-all ${page === pNum ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"}`}>{pNum}</button>;
                   }
                   if (pNum === 2 || pNum === pagination.pages - 1) return <span key={pNum} className="text-slate-300 font-bold px-1">.</span>;
                   return null;
                 })}
               </div>
-              <button disabled={page >= pagination.pages} onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} className="flex items-center justify-center px-4 h-9 bg-slate-900 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-800 shadow-lg shadow-slate-200/50 disabled:opacity-40">Next</button>
+              <button 
+                disabled={page >= pagination.pages} 
+                onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} 
+                className="flex items-center justify-center px-4 h-9 bg-indigo-600 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}
