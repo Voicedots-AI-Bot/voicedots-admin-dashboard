@@ -11,6 +11,7 @@ import { LeadDetailsDrawer } from "@/components/LeadDetailsDrawer";
 import { LeadsKpi } from "@/components/leadsKpi";
 import type { Lead } from "@/types/lead.types";
 import { useAuth } from "@/context/AuthContext";
+import { UI } from "@/ui/colors";
 
 const DRAWER_WIDTH = 420;
 
@@ -110,8 +111,12 @@ export function LeadsPage() {
       <div className="flex flex-col gap-6 transition-all duration-300" style={{ marginRight: (drawerOpen && window.innerWidth > 1024) ? `${DRAWER_WIDTH}px` : "0px" }}>
         <div className="flex flex-col items-center md:items-end md:flex-row md:justify-between gap-4 mb-4">
           <div className="text-center md:text-left">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-tight">Leads</h1>
-            <p className="text-base font-medium text-slate-500">Captured automatically by your AI avatar</p>
+            <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: UI.colors.text.primary }}>
+              Leads
+            </h1>
+            <p className="text-base font-medium" style={{ color: UI.colors.text.secondary }}>
+              Captured automatically by your AI avatar
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 px-2">
@@ -199,18 +204,77 @@ export function LeadsPage() {
           </div>
         )}
 
-        <div className="space-y-2 pr-1">
-          {loading ? <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-gray-400" /></div> : filteredLeads.length === 0 ? <div className="flex justify-center items-center py-20 text-gray-500 text-sm">No leads found</div> : filteredLeads.map((lead) => (
-            <div key={lead.conversation_id} onClick={() => { setSelectedLead(lead); setDrawerOpen(true); }} className="flex items-center bg-white border rounded-xl px-4 py-3 cursor-pointer transition hover:bg-gray-50 gap-4">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold shrink-0 text-slate-600">{(lead.name ?? "?").split(" ").map(n => n[0]).join("").toUpperCase()}</div>
-                <div className="min-w-0"><p className="font-semibold truncate text-slate-900">{lead.name ?? "Unknown"}</p><p className="text-xs text-slate-500 truncate">{lead.email ?? "—"}</p></div>
-              </div>
-              <div className="hidden lg:flex items-center gap-2 text-sm text-slate-600 w-[180px] shrink-0"><Phone size={14} className="text-slate-400" /><span className="truncate">{lead.mobile || lead.phone || "—"}</span></div>
-              <div className="w-[130px] flex justify-center shrink-0"><span className={`text-[11px] px-3 py-1 rounded-full font-bold ${lead.status === "Qualified" ? "bg-emerald-50 text-emerald-700" : lead.status === "Unqualified" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{lead.status}</span></div>
-              <div className="w-10 flex justify-end shrink-0"><button onClick={(e) => handleDeleteLead(e, lead.conversation_id)} className="w-9 h-9 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all"><Trash2 size={16} /></button></div>
+        <div className="space-y-3 pr-1">
+          {loading ? (
+            <div className="flex justify-center items-center py-24">
+              <Loader2 className="animate-spin text-indigo-400" size={32} />
             </div>
-          ))}
+          ) : filteredLeads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 bg-white border border-dashed border-slate-200 rounded-3xl gap-4">
+              <div className="p-4 rounded-full bg-slate-50 text-slate-300">
+                <Search size={32} />
+              </div>
+              <p className="text-slate-500 font-bold">No leads found</p>
+            </div>
+          ) : (
+            filteredLeads.map((lead) => (
+              <div
+                key={lead.conversation_id}
+                onClick={() => { setSelectedLead(lead); setDrawerOpen(true); }}
+                className="group flex items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:border-indigo-100/50 hover:-translate-y-0.5 gap-6"
+              >
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center text-sm font-black shrink-0 text-slate-600 shadow-sm group-hover:from-indigo-50 group-hover:to-white group-hover:border-indigo-200 transition-colors">
+                    {(lead.name ?? "?").split(" ").map(n => n[0]).join("").toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold truncate text-slate-900 text-base mb-0.5 group-hover:text-indigo-600 transition-colors">
+                      {lead.name ?? "Unknown"}
+                    </p>
+                    <p className="text-[13px] font-medium text-slate-400 truncate">
+                      {lead.email ?? "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="hidden lg:flex items-center gap-10 text-sm text-slate-600 w-[350px] shrink-0">
+                  <div className="flex items-center gap-2.5 w-[140px] shrink-0">
+                    <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                      <Phone size={14} />
+                    </div>
+                    <span className="truncate font-bold text-slate-700">{lead.mobile || lead.phone || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 font-bold tracking-tight whitespace-nowrap">
+                    {lead.created_at ? new Date(lead.created_at).toLocaleString(undefined, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short'
+                    }) : "—"}
+                  </div>
+                </div>
+
+                <div className="w-[130px] flex justify-center shrink-0">
+                  <span className={`text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-xl font-black shadow-sm ${
+                    lead.status === "Qualified" 
+                      ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
+                      : lead.status === "Unqualified" 
+                      ? "bg-amber-50 text-amber-600 border border-amber-100" 
+                      : "bg-indigo-50 text-indigo-600 border border-indigo-100"
+                  }`}>
+                    {lead.status}
+                  </span>
+                </div>
+
+                <div className="w-10 flex justify-end shrink-0">
+                  <button 
+                    onClick={(e) => handleDeleteLead(e, lead.conversation_id)} 
+                    className="w-10 h-10 rounded-xl border border-slate-100 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

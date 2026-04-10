@@ -1,11 +1,11 @@
 import {
-  Users,
-  CheckCircle,
+  MessageSquare,
+  BarChart3,
 } from "lucide-react";
 
 type KpiProps = {
-  totalLeads: number;
-  qualifiedLeads: number;
+  totalConversations: number;
+  totalMessages: number;
 };
 
 function KpiCard({
@@ -13,13 +13,11 @@ function KpiCard({
   label,
   value,
   variant = "default",
-  vertical = false,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: number;
+  value: string | number;
   variant?: "default" | "success";
-  vertical?: boolean;
 }) {
   const styles = {
     default: {
@@ -44,12 +42,8 @@ function KpiCard({
     <div
       className={`
         bg-white border ${style.border} rounded-2xl
-        px-6 py-5 flex transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5 hover:-translate-y-0.5
-        ${
-          vertical
-            ? "flex-col items-center text-center gap-3"
-            : "flex-row items-center gap-5"
-        }
+        px-6 py-5 flex items-center gap-5
+        transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5
       `}
     >
       <div className={`p-3.5 rounded-2xl ${style.iconBg} ${style.iconColor} shadow-lg ${variant === 'default' ? 'shadow-indigo-100' : 'shadow-emerald-100'} shrink-0`}>
@@ -68,22 +62,22 @@ function KpiCard({
   );
 }
 
-export function LeadsKpi({
-  totalLeads,
-  qualifiedLeads,
+export function ConversationsKpi({
+  totalConversations,
+  totalMessages,
 }: KpiProps) {
   return (
     <div className="grid grid-cols-2 gap-4 md:gap-8">
       <KpiCard
-        icon={<Users size={24} />}
-        label="Total Leads"
-        value={totalLeads}
+        icon={<BarChart3 size={24} />}
+        label="Conversations"
+        value={totalConversations}
         variant="default"
       />
       <KpiCard
-        icon={<CheckCircle size={24} />}
-        label="Qualified Leads"
-        value={qualifiedLeads}
+        icon={<MessageSquare size={24} />}
+        label="Messages"
+        value={totalMessages}
         variant="success"
       />
     </div>

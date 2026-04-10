@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { User, Mail, Lock, Shield, Camera, KeyRound, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { UI } from "@/ui/colors";
 import usersApi from "@/api/usersApi";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -154,16 +155,20 @@ export default function SettingsPage() {
       
       {/* Header */}
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Account Settings</h1>
-        <p className="text-sm text-slate-500">Manage your profile information and account security.</p>
+        <h1 className="text-3xl font-bold tracking-tight leading-tight" style={{ color: UI.colors.text.primary }}>
+          Account Settings
+        </h1>
+        <p className="text-base font-medium" style={{ color: UI.colors.text.secondary }}>
+          Manage your profile information and account security
+        </p>
       </div>
 
       <div className="space-y-8">
         
         {/* Profile Section */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Profile Information</h2>
+        <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Profile Information</h2>
           </div>
           
           <form onSubmit={handleProfileSubmit} className="p-6 space-y-8">
@@ -189,7 +194,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
                 >
                   Upload Photo
                 </button>
@@ -267,7 +272,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={isSavingProfile}
-                className="px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-semibold rounded-lg hover:opacity-90 transition-all flex items-center gap-2"
+                className="px-8 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all flex items-center gap-2 shadow-lg shadow-slate-100 active:scale-95"
               >
                 {isSavingProfile ? <Loader2 className="animate-spin" size={18} /> : "Save Changes"}
               </button>
@@ -276,10 +281,10 @@ export default function SettingsPage() {
         </section>
 
         {/* Security Section */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-             <Shield className="text-blue-600" size={18} />
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider">Security & Password</h2>
+        <section className="bg-white border border-slate-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-0.5">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+             <Shield className="text-indigo-600" size={18} />
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Security & Password</h2>
           </div>
           
           <form onSubmit={handleSecuritySubmit} className="p-6 space-y-8">
@@ -340,7 +345,7 @@ export default function SettingsPage() {
                <button
                 type="submit"
                 disabled={isSavingSecurity}
-                className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2"
+                className="px-8 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 active:scale-95"
               >
                 {isSavingSecurity ? <Loader2 className="animate-spin" size={18} /> : "Update Password"}
               </button>

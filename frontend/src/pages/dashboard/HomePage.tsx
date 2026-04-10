@@ -8,6 +8,7 @@ import {
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { kpiAPI } from "@/api/kpi";
+import { UI } from "@/ui/colors";
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
 import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
 import { ConversationsVolumeChart } from "@/components/charts/ConversationsVolumeChart";
@@ -300,14 +301,14 @@ export function HomePage() {
       <div className="flex flex-col items-center lg:items-start gap-6 lg:flex-row lg:justify-between">
         <div className="space-y-1">
           <div className="flex items-center justify-center lg:justify-start gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{greeting}</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em]" style={{ color: UI.colors.text.secondary }}>{greeting}</p>
             <span className="h-px w-8 bg-slate-200"></span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900">
-            Dashboard <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Overview</span>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-tight" style={{ color: UI.colors.text.primary }}>
+            Dashboard <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">Overview</span>
           </h1>
-          <div className="flex items-center justify-center lg:justify-start gap-3 text-sm font-medium text-slate-500">
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 ring-1 ring-emerald-500/20">
+          <div className="flex items-center justify-center lg:justify-start gap-3 text-sm font-medium">
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-600 ring-1 ring-emerald-500/20 shadow-sm">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
