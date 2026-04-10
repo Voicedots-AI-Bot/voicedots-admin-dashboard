@@ -48,16 +48,16 @@ const conversationsApi = {
       { params }
     );
 
-    const pag = response.data.pagination;
+    const pag = response.data.pagination as any;
 
     return {
       conversations: response.data.data,
       nextPage: response.data.next_page || (pag?.next_page ? String(pag.next_page) : null),
       pagination: {
-        total: pag?.total_count ?? 0,
-        page: pag?.current_page || page,
-        pages: pag?.total_pages || 1,
-        limit: pag?.limit || limit
+        total: pag?.total_count ?? pag?.total ?? 0,
+        page: pag?.current_page ?? pag?.page ?? page,
+        pages: pag?.total_pages ?? pag?.pages ?? 1,
+        limit: pag?.limit ?? limit
       }
     };
   },

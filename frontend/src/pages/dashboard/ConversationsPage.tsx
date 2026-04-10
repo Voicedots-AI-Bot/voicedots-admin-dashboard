@@ -62,7 +62,7 @@ export function ConversationsPage() {
             startDate,
             endDate
           ),
-          p === 1 ? kpiAPI.getKpiSummary(user?.agent_id) : Promise.resolve(null)
+          p === 1 ? kpiAPI.getKpiSummary(user?.agent_id, startDate, endDate) : Promise.resolve(null)
         ]);
 
         setConversations(convData.conversations);

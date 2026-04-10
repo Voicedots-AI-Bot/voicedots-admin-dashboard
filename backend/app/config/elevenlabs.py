@@ -13,8 +13,19 @@ class ElevenLabsClient:
     async def list_agents(self) -> Dict[str, Any]:
         return await self.client.conversational_ai.agents.list()
     
-    async def list_conversations(self, agent_id: str = None, cursor: str = None) -> Dict[str, Any]:
-        return await self.client.conversational_ai.conversations.list(agent_id=agent_id, cursor=cursor)
+    async def list_conversations(
+        self, 
+        agent_id: str = None, 
+        cursor: str = None,
+        start_date: int = None,
+        end_date: int = None
+    ) -> Dict[str, Any]:
+        return await self.client.conversational_ai.conversations.list(
+            agent_id=agent_id, 
+            cursor=cursor,
+            call_start_after_unix=start_date,
+            call_start_before_unix=end_date
+        )
     
     async def get_conversation_details(self, conversation_id: str):
         return await self.client.conversational_ai.conversations.get(conversation_id)

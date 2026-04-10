@@ -21,10 +21,18 @@ router = APIRouter(
     summary="Get KPI summary + timeseries",
     description="Return KPI summary and daily timeseries for graphs"
 )
-async def get_kpis_full(request: Request, db: AsyncSession = Depends(get_db)):
+async def get_kpis_full(
+    request: Request, 
+    db: AsyncSession = Depends(get_db),
+    start_date: str | None = None,
+    end_date: str | None = None
+):
     try:
         user_id = uuid.UUID(request.state.user["sub"])
+        # Note: get_kpis_with_timeseries could also be filtered, but let's start with summary
         results = await get_kpis_with_timeseries(user_id, db)
+        # Update summary part with filtered KPIs
+        results["summary"] = await get_kpis(user_id, db, start_date, end_date)
         return results
 
     except Exception:
@@ -50,10 +58,15 @@ async def get_kpis_full(request: Request, db: AsyncSession = Depends(get_db)):
     summary="Get KPI summary",
     description="Return aggregated KPI metrics for dashboard"
 )
-async def get_kpi_summary(request: Request, db: AsyncSession = Depends(get_db)):
+async def get_kpi_summary(
+    request: Request, 
+    db: AsyncSession = Depends(get_db),
+    start_date: str | None = None,
+    end_date: str | None = None
+):
     try:
         user_id = uuid.UUID(request.state.user["sub"])
-        results = await get_kpis(user_id, db)
+        results = await get_kpis(user_id, db, start_date, end_date)
         return results
 
     except Exception:
