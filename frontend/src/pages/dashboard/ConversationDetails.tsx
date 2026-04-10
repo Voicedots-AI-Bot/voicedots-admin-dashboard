@@ -111,7 +111,7 @@ export function ConversationDetails() {
               </div>
             ) : (
               messages?.map((msg, i) => {
-                const isAgent = msg.role === "agent";
+                const isAgent = msg.role === "agent" || msg.role === "assistant";
                 if (!msg.message) return null;
 
                 return (
@@ -204,9 +204,9 @@ function LeadInfo({ lead }: any) {
           </div>
         </div>
 
-        <InfoRow icon={<Phone size={14} />} label="Phone" value={lead?.mobile || "N/A"} />
+        <InfoRow icon={<Phone size={14} />} label="Phone" value={lead?.mobile || lead?.phone || lead?.phone_number || "N/A"} />
         <InfoRow icon={<Mail size={14} />} label="Email" value={lead?.email || "N/A"} />
-        <InfoRow icon={<Briefcase size={14} />} label="Business" value={lead?.business_description || "N/A"} />
+        <InfoRow icon={<Briefcase size={14} />} label="Business" value={lead?.business_description || lead?.business_desc || lead?.summary || "N/A"} />
       </div>
 
       <div className="bg-white border rounded-lg">

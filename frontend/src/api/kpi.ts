@@ -1,17 +1,30 @@
 import { apiClient } from './apiClient';
 import type { GetKpisResult, KpiSummary } from "@/types/conversation.types";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const getApiVersion = (agentId?: string | null): string => {
+  if (agentId && agentId.startsWith("voicedots_agent_")) {
+    return "v3";
+  }
+  if (agentId && (agentId.startsWith("agent_") || agentId.startsWith("agenet_"))) {
+    return "v1";
+  }
+  return "v1"; // Default to v1
+};
+
 export const kpiAPI = {
-  getKpiSummary: async (): Promise<KpiSummary> => {
+  getKpiSummary: async (agentId?: string | null): Promise<KpiSummary> => {
+    const version = getApiVersion(agentId);
     const response = await apiClient.get<KpiSummary>(
-      "/v1/kpis/summary/"
+      `/${version}/kpis/summary`
     );
     return response.data;
   },
 
-  getKpis: async (): Promise<GetKpisResult> => {
+  getKpis: async (agentId?: string | null): Promise<GetKpisResult> => {
+    const version = getApiVersion(agentId);
     const response = await apiClient.get<GetKpisResult>(
-      "/v1/kpis/"
+      `/${version}/kpis/`
     );
     return response.data;
   },

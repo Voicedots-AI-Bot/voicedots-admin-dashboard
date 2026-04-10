@@ -27,7 +27,7 @@ const LoginPage = () => {
     try {
       setLoading(true);
       await authApi.login(email, password);
-      login();
+      await login();
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setError(

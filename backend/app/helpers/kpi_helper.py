@@ -1,9 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime, timezone, timedelta
 from app.models.usage_db import Usage
 from app.models.conversation_details_db import ConversationDetails
+from app.models.leads_db import Lead
 from app.config.constants import PRICE_PER_1000_CREDITS
 from uuid import UUID
 from app.config.logger import get_logger
@@ -121,6 +123,24 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
             .group_by(ConversationDetails.date)
         )
 
+        # Get agent_id first to fetch lead counts
+        from app.models.users_db import User
+        agent_id_res = await db.execute(select(User.agent_id).where(User.user_id == user_id))
+        agent_id = agent_id_res.scalar_one_or_none()
+        
+        leads_map = {}
+        if agent_id:
+            lead_date = func.to_char(Lead.created_at, 'DD Mon YYYY')
+            leads_res = await db.execute(
+                select(
+                    lead_date.label("date"),
+                    func.count(Lead.lead_id).label("leads")
+                )
+                .where(Lead.agent_id == agent_id)
+                .group_by(lead_date)
+            )
+            leads_map = {r.date: r.leads for r in leads_res.all()}
+
         rows = result.all()
         timeseries = []
         for r in rows:
@@ -132,6 +152,7 @@ async def get_kpis_with_timeseries(user_id: UUID, db: AsyncSession):
                 "cost_usd": r.cost_usd or 0,
                 "total_call_duration_secs": ts,
                 "avg_call_duration_secs": int(ts / r.conversations) if r.conversations > 0 else 0,
+                "leads_captured": leads_map.get(r.date, 0)
             })
 
         timeseries.sort(key=lambda x: datetime.strptime(x["date"], "%d %b %Y") if x["date"] else datetime.min)

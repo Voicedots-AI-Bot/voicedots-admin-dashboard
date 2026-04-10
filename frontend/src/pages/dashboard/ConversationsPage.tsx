@@ -14,12 +14,20 @@ import { useAuth } from "@/context/AuthContext";
 export function ConversationsPage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
-  const [conversations, setConversations] =
-    useState<ConversationsListSummary[]>([]);
-  const [page, setPage] = useState(0);
+  const [conversations, setConversations] = useState<ConversationsListSummary[]>([]);
   const [nextPage, setNextPage] = useState<string | null>(null);
-  const [, setStack] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(1);
+  const [stack, setStack] = useState<string[]>([]);
+  
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 30,
+    pages: 1
+  });
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const [isLoading, setIsLoading] = useState(true);
 
   const push = (item: string) => {
@@ -37,41 +45,38 @@ export function ConversationsPage() {
   };
 
   const fetchConversations = useCallback(
-    async (cursor: string | null = null) => {
+    async (cursor: string | null = null, p: number = 1) => {
       try {
         setIsLoading(true);
         const data = await conversationsApi.getConversations(
           user?.agent_id,
-          cursor
+          cursor,
+          p,
+          pagination.limit,
+          startDate,
+          endDate
         );
         setConversations(data.conversations);
         setNextPage(data.nextPage);
+        if (data.pagination) setPagination(data.pagination as any);
       } finally {
         setIsLoading(false);
       }
     },
-    [user?.agent_id]
+    [user?.agent_id, pagination.limit, startDate, endDate]
   );
 
   useEffect(() => {
-    fetchConversations(null);
+    setPagination(p => ({...p, page: 1}));
+    setStack([]);
+    fetchConversations(null, 1);
+  }, [startDate, endDate, searchQuery]);
+
+  useEffect(() => {
+    if (pagination.page !== 1) {
+       fetchConversations(null, pagination.page);
+    }
   }, [fetchConversations]);
-
-  const handleNext = () => {
-    if (!nextPage) return;
-    push(nextPage);
-    setPage(page + 1);
-    setCurrentIndex(currentIndex + conversations.length);
-    fetchConversations(nextPage);
-  };
-
-  const handlePrev = () => {
-    if (page === 0) return;
-    setPage(page - 1);
-    setNextPage(pop() ?? null);
-    setCurrentIndex(currentIndex - conversations.length);
-    fetchConversations(nextPage);
-  };
 
   const filteredConversations = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -101,55 +106,98 @@ export function ConversationsPage() {
           </p>
         </div>
 
-        {/* SEARCH */}
-        <div className="relative w-full md:w-[320px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search conversations"
-            className="
-              h-10 w-full
-              rounded-lg border
-              pl-9 pr-3 text-sm
-              outline-none
-            "
-          />
+        {/* FILTERS */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl h-10 shadow-sm overflow-hidden ring-1 ring-slate-100">
+            <div className="flex flex-col px-3 border-r border-slate-100 group">
+              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest leading-none mt-1.5 group-hover:text-blue-500 transition-colors">From</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => setStartDate(e.target.value)} 
+                className="text-xs outline-none bg-transparent font-semibold py-0.5 cursor-pointer" 
+              />
+            </div>
+            <div className="flex flex-col px-3 group">
+              <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest leading-none mt-1.5 group-hover:text-blue-500 transition-colors">To</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => setEndDate(e.target.value)} 
+                className="text-xs outline-none bg-transparent font-semibold py-0.5 cursor-pointer" 
+              />
+            </div>
+          </div>
+
+          {(startDate || endDate) && (
+            <button 
+              onClick={() => { setStartDate(""); setEndDate(""); }} 
+              className="text-sm text-red-500 font-bold hover:text-red-600 transition-colors px-1"
+            >
+              Clear
+            </button>
+          )}
+
+          {/* SEARCH */}
+          <div className="relative w-full md:w-[320px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search conversations"
+              className="
+                h-10 w-full
+                rounded-lg border
+                pl-9 pr-3 text-sm
+                outline-none
+              "
+            />
+          </div>
         </div>
       </div>
 
       {/* PAGINATION */}
-      <div className="flex justify-between md:justify-end gap-2">
-        <button
-          onClick={handlePrev}
-          disabled={page === 0 || isLoading}
-          className="
-            flex items-center gap-1
-            rounded-md border
-            px-3 py-1.5 text-xs
-            md:px-4 md:py-2 md:text-sm
-            disabled:opacity-50
-          "
-        >
-          <ChevronLeft size={14} />
-          Previous
-        </button>
-
-        <button
-          onClick={handleNext}
-          disabled={!nextPage || isLoading}
-          className="
-            flex items-center gap-1
-            rounded-md border
-            px-3 py-1.5 text-xs
-            md:px-4 md:py-2 md:text-sm
-            disabled:opacity-50
-          "
-        >
-          Next
-          <ChevronRight size={14} />
-        </button>
-      </div>
+      {!isLoading && pagination.pages > 1 && (
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-4 md:py-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-4">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">Page <span className="text-slate-900">{pagination.page}</span> of <span className="text-slate-900">{pagination.pages}</span></p>
+              <div className="h-4 w-px bg-slate-200 mx-2"></div>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400">Total <span className="text-slate-900 font-black">{pagination.total}</span> conversations</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button disabled={pagination.page <= 1} onClick={() => { setPagination(p => ({...p, page: Math.max(1, p.page - 1)})); fetchConversations(pop() ?? null, pagination.page - 1); }} className="flex items-center justify-center px-4 h-9 bg-white border border-slate-200 rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-50 disabled:opacity-40">Prev</button>
+              <div className="flex items-center gap-1">
+                {[...Array(pagination.pages)].map((_, i) => {
+                  const pNum = i + 1;
+                  if (pNum === 1 || pNum === pagination.pages || (pNum >= pagination.page - 1 && pNum <= pagination.page + 1)) {
+                    return <button key={pNum} onClick={() => { setPagination(p => ({...p, page: pNum})); fetchConversations(null, pNum); }} className={`w-9 h-9 flex items-center justify-center rounded-xl text-[10px] sm:text-xs font-black transition-all ${pagination.page === pNum ? "bg-slate-900 text-white shadow-md" : "bg-white border border-slate-200 text-slate-400 hover:text-slate-900"}`}>{pNum}</button>;
+                  }
+                  if (pNum === 2 || pNum === pagination.pages - 1) return <span key={pNum} className="text-slate-300 font-bold px-1">.</span>;
+                  return null;
+                })}
+              </div>
+              <button disabled={pagination.page >= pagination.pages && !nextPage} onClick={() => { if(nextPage) push(nextPage); setPagination(p => ({...p, page: Math.min(pagination.pages, p.page + 1)})); fetchConversations(nextPage, pagination.page + 1); }} className="flex items-center justify-center px-4 h-9 bg-slate-900 text-white rounded-xl text-[10px] sm:text-xs font-black uppercase transition-all hover:bg-slate-800 shadow-lg shadow-slate-200/50 disabled:opacity-40">Next</button>
+            </div>
+          </div>
+        )}
+      {!isLoading && pagination.pages <= 1 && (nextPage || stack.length > 0) && (
+        <div className="flex justify-between md:justify-end gap-2">
+          <button
+            onClick={() => { setPagination(p => ({...p, page: Math.max(1, p.page - 1)})); fetchConversations(pop() ?? null, pagination.page - 1); }}
+            disabled={stack.length === 0 || isLoading}
+            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm disabled:opacity-50"
+          >
+            <ChevronLeft size={14} /> Previous
+          </button>
+          <button
+            onClick={() => { if(nextPage) push(nextPage); setPagination(p => ({...p, page: Math.min(pagination.pages, p.page + 1)})); fetchConversations(nextPage, pagination.page + 1); }}
+            disabled={!nextPage || isLoading}
+            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm disabled:opacity-50"
+          >
+             Next <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
 
       {/* LIST */}
       <div className="flex flex-col gap-3 pr-1 md:pr-2">
@@ -162,7 +210,7 @@ export function ConversationsPage() {
             <ConversationCard
               key={conversation.conversation_id}
               conversation={conversation}
-              index={index + currentIndex}
+              index={index + 1 + (pagination.page - 1) * pagination.limit}
             />
           ))
         )}

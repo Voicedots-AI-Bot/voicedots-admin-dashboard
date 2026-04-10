@@ -93,7 +93,7 @@ export function LeadsPage() {
 
     const headers = ["Name", "Phone", "Email", "Description", "Status", "Date"].join(",");
     const rows = leadsToExport.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-      .map(l => [escapeCsv(l.name), escapeCsv((l as any).mobile), escapeCsv(l.email), escapeCsv(l.business_description), escapeCsv(l.status), formatDt(l.created_at)].join(","));
+      .map(l => [escapeCsv(l.name), escapeCsv(l.mobile || l.phone), escapeCsv(l.email), escapeCsv(l.business_description || l.summary), escapeCsv(l.status), formatDt(l.created_at)].join(","));
 
     const blob = new Blob(["\uFEFF" + [headers, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -187,7 +187,7 @@ export function LeadsPage() {
                 <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold shrink-0 text-slate-600">{(lead.name ?? "?").split(" ").map(n => n[0]).join("").toUpperCase()}</div>
                 <div className="min-w-0"><p className="font-semibold truncate text-slate-900">{lead.name ?? "Unknown"}</p><p className="text-xs text-slate-500 truncate">{lead.email ?? "—"}</p></div>
               </div>
-              <div className="hidden lg:flex items-center gap-2 text-sm text-slate-600 w-[180px] shrink-0"><Phone size={14} className="text-slate-400" /><span className="truncate">{lead.mobile ?? "—"}</span></div>
+              <div className="hidden lg:flex items-center gap-2 text-sm text-slate-600 w-[180px] shrink-0"><Phone size={14} className="text-slate-400" /><span className="truncate">{lead.mobile || lead.phone || "—"}</span></div>
               <div className="w-[130px] flex justify-center shrink-0"><span className={`text-[11px] px-3 py-1 rounded-full font-bold ${lead.status === "Qualified" ? "bg-emerald-50 text-emerald-700" : lead.status === "Unqualified" ? "bg-amber-50 text-amber-700" : "bg-blue-50 text-blue-700"}`}>{lead.status}</span></div>
               <div className="w-10 flex justify-end shrink-0"><button onClick={(e) => handleDeleteLead(e, lead.conversation_id)} className="w-9 h-9 rounded-full border border-slate-100 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all"><Trash2 size={16} /></button></div>
             </div>

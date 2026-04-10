@@ -90,7 +90,7 @@ export function LeadDetailsDrawer({
       <div className="sticky top-0 z-10 bg-white border-b px-5 py-4 flex items-start justify-between">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold">
-            {getInitials(lead.name)}
+            {getInitials(lead.name || "Unknown")}
           </div>
           <div>
             <p className="font-semibold leading-tight">{lead.name}</p>
@@ -156,11 +156,13 @@ export function LeadDetailsDrawer({
         <Action
           icon={<MessageCircle size={16} />}
           label="WhatsApp"
-          disabled={!lead.mobile}
-          onClick={() =>
-            lead.mobile &&
-            window.open(`https://wa.me/${lead.mobile.replace(/\D/g, "")}`, "_blank")
-          }
+          disabled={!(lead.mobile || lead.phone)}
+          onClick={() => {
+            const phoneStr = lead.mobile || lead.phone;
+            if (phoneStr) {
+               window.open(`https://wa.me/${phoneStr.replace(/\D/g, "")}`, "_blank");
+            }
+          }}
           tooltipVariant="green"
         />
       </div>
@@ -191,14 +193,14 @@ export function LeadDetailsDrawer({
       <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 text-sm min-w-0">
   {tab === "details" && (
     <>
-      <InfoRow label="Phone" value={lead.mobile} />
-      <InfoRow label="Email" value={lead.email} />
+      <InfoRow label="Phone" value={lead.mobile || lead.phone || "—"} />
+      <InfoRow label="Email" value={lead.email || "—"} />
 
       <div className="flex justify-between items-start gap-4 min-w-0">
         <p className="text-gray-500 shrink-0">Business Description</p>
 
         <p className="font-medium leading-relaxed text-right max-w-xl w-full min-w-0 break-words overflow-hidden">
-          {lead.business_description}
+          {lead.business_description || lead.summary || "—"}
         </p>
       </div>
     </>
@@ -267,11 +269,13 @@ export function LeadDetailsDrawer({
           />
           <Action
             label="Send WhatsApp"
-            disabled={!lead.mobile}
-            onClick={() =>
-              lead.mobile &&
-              window.open(`https://wa.me/${lead.mobile.replace(/\D/g, "")}`, "_blank")
-            }
+            disabled={!(lead.mobile || lead.phone)}
+            onClick={() => {
+              const phoneStr = lead.mobile || lead.phone;
+              if (phoneStr) {
+                 window.open(`https://wa.me/${phoneStr.replace(/\D/g, "")}`, "_blank");
+              }
+            }}
             tooltipVariant="green"
           />
         </div>

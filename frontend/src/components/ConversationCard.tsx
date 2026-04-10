@@ -15,7 +15,8 @@ export function ConversationCard({
 
   const isSuccess =
     conversation.call_status === "done" ||
-    conversation.call_status === "success";
+    conversation.call_status === "success" ||
+    conversation.call_status === true;
 
   const status = isSuccess
     ? {

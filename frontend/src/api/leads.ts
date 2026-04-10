@@ -35,9 +35,12 @@ interface UpdateLeadStatusResponse {
 
 const getApiVersion = (agentId?: string | null): string => {
   if (agentId && agentId.startsWith("voicedots_agent_")) {
-    return "v2";
+    return "v3";
   }
-  return "v1";
+  if (agentId && (agentId.startsWith("agent_") || agentId.startsWith("agenet_"))) {
+    return "v1";
+  }
+  return "v1"; // Default to v1
 };
 
 const leadsApi = {
@@ -63,9 +66,32 @@ const leadsApi = {
           },
         }
       );
+      const pag = response.data.pagination as any;
+      const sanitizeStr = (s: any) => {
+        if (typeof s === "string") {
+          const l = s.trim().toLowerCase();
+          if (l === "null" || l === "none" || l === "") return undefined;
+        }
+        return s;
+      };
+      
       return {
-        data: response.data.data,
-        pagination: response.data.pagination,
+        data: response.data.data.map((lead: any) => ({
+           ...lead,
+           name: sanitizeStr(lead.name),
+           email: sanitizeStr(lead.email),
+           phone: sanitizeStr(lead.phone),
+           mobile: sanitizeStr(lead.mobile),
+           summary: sanitizeStr(lead.summary),
+           business_description: sanitizeStr(lead.business_description),
+        })),
+        pagination: {
+          total: pag.total_count ?? pag.total ?? 0,
+          qualified: pag.qualified_count ?? pag.qualified ?? 0,
+          page: pag.current_page ?? pag.page ?? 1,
+          limit: pag.limit ?? 50,
+          pages: pag.total_pages ?? pag.pages ?? 0,
+        },
       };
     } catch (error) {
       console.error("Error fetching leads:", error);
@@ -83,7 +109,24 @@ const leadsApi = {
         await apiClient.get<GetLeadDetailsResponse>(
           `/${version}/leads/${conversationId}`
         );
-      return response.data.data;
+      const lead = response.data.data as any;
+      const sanitizeStr = (s: any) => {
+        if (typeof s === "string") {
+          const l = s.trim().toLowerCase();
+          if (l === "null" || l === "none" || l === "") return undefined;
+        }
+        return s;
+      };
+
+      return {
+         ...lead,
+         name: sanitizeStr(lead.name),
+         email: sanitizeStr(lead.email),
+         phone: sanitizeStr(lead.phone),
+         mobile: sanitizeStr(lead.mobile),
+         summary: sanitizeStr(lead.summary),
+         business_description: sanitizeStr(lead.business_description),
+      };
     } catch (error) {
       console.error(
         `Error fetching lead ${conversationId}:`,

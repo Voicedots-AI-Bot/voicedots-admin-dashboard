@@ -1,17 +1,18 @@
 import { motion } from "framer-motion";
 import {
   MessageSquare,
-  DollarSign,
   Activity,
   Calendar,
   Clock,
-  Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { kpiAPI } from "@/api/kpi";
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
-import { CostOverTimeChart } from "@/components/charts/CostOverTimeChart";
 import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
+import { ConversationsVolumeChart } from "@/components/charts/ConversationsVolumeChart";
+import { EngagementChart } from "@/components/charts/EngagementChart";
+import { LeadsCapturedChart } from "@/components/charts/LeadsCapturedChart";
 import { AvgCallDurationChart } from "@/components/charts/AvgCallDurationChart";
 import {
   ResponsiveContainer,
@@ -28,7 +29,6 @@ type Preset = "7d" | "15d" | "30d" | "all" | "custom";
 // Do not start counts before this to avoid skewed percentages.
 const INTEGRATION_DATE = "2026-03-23";
 
-const formatUsd = (v = 0) => `$${v.toFixed(2)}`;
 const formatHours = (secs = 0) => `${(secs / 3600).toFixed(1)}h`;
 
 const getSafeLocalDate = (dateInput: string | Date) => {
@@ -116,6 +116,7 @@ const MiniSparkline = ({ data, color, formatter }: { data: any[], color: string,
 /* ================= MAIN PAGE ================= */
 
 export function HomePage() {
+  const { user } = useAuth();
   const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [preset, setPreset] = useState<Preset>("7d");
@@ -123,22 +124,23 @@ export function HomePage() {
   const pollTimer = useRef<any>(null);
 
   const fetchKPIs = useCallback(async (isSilent = false) => {
+    if (!user?.agent_id) return;
     if (!isSilent) setLoading(true);
     try {
-      const res = await kpiAPI.getKpis();
+      const res = await kpiAPI.getKpis(user.agent_id);
       setTimeseries(res.timeseries);
     } catch (err) {
       console.error("Failed to fetch KPIs:", err);
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, []);
+  }, [user?.agent_id]);
 
   useEffect(() => {
     fetchKPIs();
-    pollTimer.current = setInterval(() => fetchKPIs(true), 120000); // 2 min polling
+    pollTimer.current = setInterval(() => fetchKPIs(true), 10000); // 10 sec polling for realtime
     return () => { if (pollTimer.current) clearInterval(pollTimer.current); };
-  }, [fetchKPIs]);
+  }, [fetchKPIs, user?.agent_id]);
 
   const handlePresetChange = useCallback((p: Preset) => {
     setPreset(p);
@@ -284,10 +286,8 @@ export function HomePage() {
 
   const stats = [
     { label: "TOTAL CONVERSATIONS", value: loading ? "—" : currentStats.conversations.toLocaleString(), icon: MessageSquare, trend: getTrend("conversations"), dataKey: "conversations", format: (v: number) => `${v} convs` },
-    { label: "TOTAL COST", value: loading ? "—" : formatUsd(currentStats.cost), icon: DollarSign, trend: getTrend("cost"), dataKey: "cost_usd", format: formatUsd },
     { label: "TOTAL MESSAGES", value: loading ? "—" : currentStats.messages.toLocaleString(), icon: Activity, trend: getTrend("messages"), dataKey: "messages", format: (v: number) => `${v.toLocaleString()} msgs` },
     { label: "TOTAL DURATION", value: loading ? "—" : formatHours(currentStats.totalDuration), icon: Clock, trend: getTrend("totalDuration"), dataKey: "total_call_duration_secs", format: (v: number) => `${Math.floor(v / 60)}m ${Math.round(v % 60)}s` },
-    { label: "AVG COST / CONV", value: loading ? "—" : formatUsd(currentStats.avgCost), icon: Users, trend: getTrend("avgCost"), dataKey: "avg_cost", format: formatUsd },
   ];
 
   const greeting = useMemo(() => {
@@ -343,7 +343,7 @@ export function HomePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <motion.div key={stat.label} variants={item} className="group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300 cursor-pointer">
             <div className="flex items-start justify-between mb-4">
@@ -375,9 +375,15 @@ export function HomePage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <CostOverTimeChart data={filteredData} />
+        <ConversationsVolumeChart data={filteredData} />
         <ConversationsPerDayChart data={filteredData} />
       </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <LeadsCapturedChart data={filteredData} />
+        <EngagementChart data={filteredData} />
+      </div>
+
       <AvgCallDurationChart data={filteredData} />
     </motion.div>
   );

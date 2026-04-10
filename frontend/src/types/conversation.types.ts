@@ -7,7 +7,7 @@ export interface ConversationsListSummary {
   title: string;
   duration: number;
   message_count: number;
-  call_status: string;
+  call_status: string | boolean;
   start_time: number;
   end_time: number;
   time_format: string
@@ -17,11 +17,24 @@ export interface GetConversationsResponse {
   status: string;
   data: ConversationsListSummary[];
   next_page: string | null;
+  pagination?: {
+    total_count: number;
+    current_page: number;
+    total_pages: number;
+    limit: number;
+    next_page?: string | number | null;
+  };
 }
 
 export interface GetConversationsListResult {
   conversations: ConversationsListSummary[];
   nextPage: string | null;
+  pagination?: {
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  };
 }
 
 /* =============================
@@ -29,7 +42,7 @@ export interface GetConversationsListResult {
 ============================= */
 
 export interface ConversationDetailsSummary {
-  role: "agent" | "user";
+  role: "agent" | "user" | "assistant";
   message: string | null;
   avatar: string | null;
   timestamp: number;
@@ -37,10 +50,14 @@ export interface ConversationDetailsSummary {
 }
 
 export interface LeadDetails {
-  name: string;
-  email: string;
-  phone_number: string;
-  business_desc: string;
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  phone?: string;
+  mobile?: string;
+  business_desc?: string;
+  business_description?: string;
+  summary?: string;
 }
 
 export interface GetConversationDetailsResponse {
@@ -86,6 +103,7 @@ export interface KpiTimeseriesPoint {
   cost_usd: number;
   total_call_duration_secs: number;
   avg_call_duration_secs: number;
+  leads_captured?: number;
 }
 
 /* =============================

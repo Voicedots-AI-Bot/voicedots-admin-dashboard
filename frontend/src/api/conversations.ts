@@ -9,9 +9,12 @@ import type {
 
 const getApiVersion = (agentId?: string | null): string => {
   if (agentId && agentId.startsWith("voicedots_agent_")) {
-    return "v2";
+    return "v3";
   }
-  return "v1";
+  if (agentId && (agentId.startsWith("agent_") || agentId.startsWith("agenet_"))) {
+    return "v1";
+  }
+  return "v1"; // Default to v1
 };
 
 const conversationsApi = {
@@ -20,26 +23,42 @@ const conversationsApi = {
   ===================================================== */
   getConversations: async (
     agentId?: string | null,
-    cursor?: string | null
+    cursor?: string | null,
+    page: number = 1,
+    limit: number = 30,
+    startDate?: string,
+    endDate?: string
   ): Promise<GetConversationsListResult> => {
-    const params: Record<string, string | null | undefined> = {
-      cursor,
-    };
-
-    if (agentId) {
-      params.agent_id = agentId;
-    }
-
     const version = getApiVersion(agentId);
+    
+    const params: Record<string, string | number | undefined> = {};
+    if (agentId) params.agent_id = agentId;
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    
+    if (version === "v3") {
+      params.page = page;
+      params.limit = limit;
+    } else {
+      params.cursor = cursor ?? undefined;
+    }
 
     const response = await apiClient.get<GetConversationsResponse>(
       `/${version}/conversations/`,
       { params }
     );
 
+    const pag = response.data.pagination;
+
     return {
       conversations: response.data.data,
-      nextPage: response.data.next_page,
+      nextPage: response.data.next_page || (pag?.next_page ? String(pag.next_page) : null),
+      pagination: {
+        total: pag?.total_count ?? 0,
+        page: pag?.current_page || page,
+        pages: pag?.total_pages || 1,
+        limit: pag?.limit || limit
+      }
     };
   },
 
@@ -70,9 +89,22 @@ const conversationsApi = {
     });
   };
 
+  const rawLead = response.data.lead as any;
+  const sanitizedLead = rawLead ? {
+    ...rawLead,
+    name: rawLead.name === "null" ? undefined : rawLead.name,
+    email: rawLead.email === "null" ? undefined : rawLead.email,
+    phone_number: rawLead.phone_number === "null" ? undefined : rawLead.phone_number,
+    phone: rawLead.phone === "null" ? undefined : rawLead.phone,
+    mobile: rawLead.mobile === "null" ? undefined : rawLead.mobile,
+    business_desc: rawLead.business_desc === "null" ? undefined : rawLead.business_desc,
+    business_description: rawLead.business_description === "null" ? undefined : rawLead.business_description,
+    summary: rawLead.summary === "null" ? undefined : rawLead.summary,
+  } : null;
+
   return {
     transcription: response.data.data,
-    lead: response.data.lead,
+    lead: sanitizedLead,
     start_time: formatIST(response.data.start_time),
     end_time: formatIST(response.data.end_time),
     duration: response.data.duration,

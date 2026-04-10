@@ -38,8 +38,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     refreshUser();
   }, [refreshUser]);
 
-  const login = () => {
+  const login = async () => {
     setIsAuthenticated(true);
+    await refreshUser();
   };
 
   const logout = () => {

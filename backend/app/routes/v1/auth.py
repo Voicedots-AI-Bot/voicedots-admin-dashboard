@@ -23,6 +23,12 @@ async def login(
         )
         user = result.scalar_one_or_none()
         
+        print(f"DEBUG: Login attempt for {email}")
+        if user:
+            print(f"DEBUG: User found. DB Hash prefix: {user.hashed_password[:10]}")
+        else:
+            print(f"DEBUG: User NOT found in V1 database.")
+        
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
