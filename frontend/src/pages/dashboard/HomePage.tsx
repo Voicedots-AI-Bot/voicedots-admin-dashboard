@@ -346,7 +346,6 @@ export function HomePage() {
   const stats = [
     { label: "TOTAL CONVERSATIONS", value: loading ? "—" : currentStats.conversations.toLocaleString(), icon: MessageSquare, trend: getTrend("conversations"), dataKey: "conversations", format: (v: number) => `${v} convs` },
     { label: "MESSAGE VOLUME", value: loading ? "—" : currentStats.messages.toLocaleString(), icon: Activity, trend: getTrend("messages"), dataKey: "messages", format: (v: number) => `${v.toLocaleString()} msgs` },
-    { label: "ENGAGEMENT RATE", value: loading ? "—" : `${currentStats.engagementRate.toFixed(1)} msgs/call`, icon: Activity, trend: getTrend("engagementRate" as any), dataKey: "engagement_rate", format: (v: number) => `${v.toFixed(1)} msgs` },
     { label: "TOTAL DURATION", value: loading ? "—" : formatHours(currentStats.totalDuration), icon: Clock, trend: getTrend("totalDuration"), dataKey: "total_call_duration_secs", format: (v: number) => `${Math.floor(v / 60)}m ${Math.round(v % 60)}s` },
   ];
 
@@ -404,7 +403,7 @@ export function HomePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <motion.div key={stat.label} variants={item} className="group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300 cursor-pointer">
             <div className="flex items-start justify-between mb-4">
