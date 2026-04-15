@@ -8,6 +8,7 @@ import {
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { kpiAPI } from "@/api/kpi";
+import conversationsApi from "@/api/conversations";
 import { UI } from "@/ui/colors";
 import type { KpiTimeseriesPoint } from "@/types/conversation.types";
 import { ConversationsPerDayChart } from "@/components/charts/ConversationsPerDayChart";
@@ -116,6 +117,8 @@ const MiniSparkline = ({ data, color, formatter }: { data: any[], color: string,
 
 /* ================= MAIN PAGE ================= */
 
+
+
 export function HomePage() {
   const { user } = useAuth();
   const [timeseries, setTimeseries] = useState<KpiTimeseriesPoint[]>([]);
@@ -128,10 +131,63 @@ export function HomePage() {
     if (!user?.agent_id) return;
     if (!isSilent) setLoading(true);
     try {
-      const res = await kpiAPI.getKpis(user.agent_id);
-      setTimeseries(res.timeseries);
+      // 1. Fetch KPI Timeseries (for cost, duration data)
+      const kpisRes = await kpiAPI.getKpis(user.agent_id);
+      
+      // 2. Fetch Latest Conversations (for absolute accuracy on msg/conv counts)
+      // Limit to 1000 to cover the recent history efficiently
+      const convsRes = await conversationsApi.getConversations(user.agent_id, undefined, 1, 10000);
+      const conversations = convsRes.conversations;
+
+      // 3. Aggregate conversations by date
+      const realTimeMap = new Map<string, { conversations: number; messages: number }>();
+      conversations.forEach(c => {
+        const date = getSafeLocalDate(new Date(c.start_time * 1000));
+        if (date) {
+          const existing = realTimeMap.get(date) || { conversations: 0, messages: 0 };
+          realTimeMap.set(date, {
+            conversations: existing.conversations + 1,
+            messages: existing.messages + (c.message_count || 0)
+          });
+        }
+      });
+
+      // 4. Merge Real-time data into Timeseries
+      // We prioritize realTimeMap for conversations/messages counts
+      const mergedTimeseries = kpisRes.timeseries.map(pt => {
+        const d = getSafeLocalDate(pt.date);
+        if (d && realTimeMap.has(d)) {
+          const rt = realTimeMap.get(d)!;
+          return {
+            ...pt,
+            conversations: rt.conversations,
+            messages: rt.messages,
+            engagement_rate: rt.conversations > 0 ? (rt.messages / rt.conversations) : 0,
+          };
+        }
+        return pt;
+      });
+
+      // Also add any dates that exist in conversations but not in KPI timeseries yet (like very fresh data)
+      realTimeMap.forEach((val, date) => {
+        const exists = mergedTimeseries.some(pt => getSafeLocalDate(pt.date) === date);
+        if (!exists) {
+          mergedTimeseries.push({
+            date,
+            conversations: val.conversations,
+            messages: val.messages,
+            engagement_rate: val.conversations > 0 ? (val.messages / val.conversations) : 0,
+            cost_usd: 0,
+            total_call_duration_secs: 0,
+            avg_call_duration_secs: 0,
+            leads_captured: 0
+          } as KpiTimeseriesPoint);
+        }
+      });
+
+      setTimeseries(mergedTimeseries);
     } catch (err) {
-      console.error("Failed to fetch KPIs:", err);
+      console.error("Failed to fetch Dashboard data:", err);
     } finally {
       if (!isSilent) setLoading(false);
     }
@@ -223,7 +279,9 @@ export function HomePage() {
 
     return {
       ...metrics,
-      avgCost: metrics.conversations > 0 ? metrics.cost / metrics.conversations : 0
+      avgCost: metrics.conversations > 0 ? metrics.cost / metrics.conversations : 0,
+      engagementRate: metrics.conversations > 0 ? metrics.messages / metrics.conversations : 0,
+      avgMessagesPerDay: data.length > 0 ? metrics.messages / data.length : 0
     };
   }, []);
 
@@ -287,7 +345,8 @@ export function HomePage() {
 
   const stats = [
     { label: "TOTAL CONVERSATIONS", value: loading ? "—" : currentStats.conversations.toLocaleString(), icon: MessageSquare, trend: getTrend("conversations"), dataKey: "conversations", format: (v: number) => `${v} convs` },
-    { label: "TOTAL MESSAGES", value: loading ? "—" : currentStats.messages.toLocaleString(), icon: Activity, trend: getTrend("messages"), dataKey: "messages", format: (v: number) => `${v.toLocaleString()} msgs` },
+    { label: "MESSAGE VOLUME", value: loading ? "—" : currentStats.messages.toLocaleString(), icon: Activity, trend: getTrend("messages"), dataKey: "messages", format: (v: number) => `${v.toLocaleString()} msgs` },
+    { label: "ENGAGEMENT RATE", value: loading ? "—" : `${currentStats.engagementRate.toFixed(1)} msgs/call`, icon: Activity, trend: getTrend("engagementRate" as any), dataKey: "engagement_rate", format: (v: number) => `${v.toFixed(1)} msgs` },
     { label: "TOTAL DURATION", value: loading ? "—" : formatHours(currentStats.totalDuration), icon: Clock, trend: getTrend("totalDuration"), dataKey: "total_call_duration_secs", format: (v: number) => `${Math.floor(v / 60)}m ${Math.round(v % 60)}s` },
   ];
 
@@ -298,6 +357,7 @@ export function HomePage() {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
+      {/* Header section... */}
       <div className="flex flex-col items-center lg:items-start gap-6 lg:flex-row lg:justify-between">
         <div className="space-y-1">
           <div className="flex items-center justify-center lg:justify-start gap-2">
@@ -344,7 +404,7 @@ export function HomePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <motion.div key={stat.label} variants={item} className="group relative overflow-hidden rounded-[32px] bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] ring-1 ring-slate-200/60 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-300 cursor-pointer">
             <div className="flex items-start justify-between mb-4">

@@ -23,10 +23,14 @@ export function EngagementChart({ data }: Props) {
   }, [data]);
 
   const avgEngagement = useMemo(() => {
-    const valid = engagementData.filter(d => d.engagement > 0);
-    if (!valid.length) return 0;
-    return (valid.reduce((sum, d) => sum + d.engagement, 0) / valid.length).toFixed(1);
-  }, [engagementData]);
+    const totals = data.reduce((acc, p) => ({
+      messages: acc.messages + p.messages,
+      conversations: acc.conversations + p.conversations
+    }), { messages: 0, conversations: 0 });
+    
+    if (totals.conversations === 0) return "0.0";
+    return (totals.messages / totals.conversations).toFixed(1);
+  }, [data]);
 
   return (
     <div className="group relative flex flex-col rounded-[24px] bg-white/80 p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] ring-1 ring-slate-100 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:ring-slate-200 overflow-hidden">
